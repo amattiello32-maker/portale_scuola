@@ -1,6 +1,4 @@
-// =======================
-//  SERVER DEL PORTALE SCUOLA
-// =======================
+
 
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
@@ -13,154 +11,127 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname))); // serve index.html
+app.use(bodyParser.json({ limit: "10mb" }));
+app.use(express.static(path.join(__dirname))); // Serve index.html
 
-// =======================
-//  DATABASE SQLITE
-// =======================
-const db = new sqlite3.Database("./school.db", (err) => {
-    if (err) console.error("Errore DB:", err);
-    else console.log("Database SQLite pronto");
+// --- DATABASE ---
+const db = new sqlite3.Database("school.db", (err) => {
+  if (err) console.error("Errore DB:", err);
+  else console.log("Database SQLite caricato.");
 });
 
-// Creazione tabelle
-db.run(`CREATE TABLE IF NOT EXISTS users (
-    email TEXT PRIMARY KEY,
-    username TEXT,
-    classe TEXT,
-    sezione TEXT,
-    indirizzo TEXT,
-    fotoprofilo TEXT
-)`);
+// Tabelle
+const initSQL = `
+CREATE TABLE IF NOT EXISTS users(
+  email TEXT PRIMARY KEY,
+  username TEXT,
+  classe TEXT,
+  sezione TEXT,
+  indirizzo TEXT,
+  foto TEXT
+);
 
-db.run(`CREATE TABLE IF NOT EXISTS posts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    author TEXT,
-    body TEXT,
-    timestamp TEXT,
-    anonymous INTEGER
-)`);
+CREATE TABLE IF NOT EXISTS posts(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  authorEmail TEXT,
+  body TEXT,
+  anonymous INTEGER,
+  timestamp INTEGER
+);
+`;
 
-// =======================
-//  ROTTE API
-// =======================
-
-// ---- LOGIN ----
-app.post("/login", (req, res) => {
-    const { email } = req.body;
-
-    db.get(
-        "SELECT * FROM users WHERE email = ?",
-        [email],
-        (err, row) => {
-            if (err) return res.json({ success: false });
-
-            if (!row) {
-                // crea utente nuovo se non esiste
-                db.run(
-                    `INSERT INTO users (email, username) VALUES (?, ?)`,
-                    [email, email.split("@")[0]],
-                    () => {}
-                );
-            }
-
-            res.json({ success: true });
-        }
-    );
+db.exec(initSQL, (err) => {
+  if (err) console.log("Errore creazione tabelle:", err);
+  else console.log("Tabelle inizializzate.");
 });
 
-// ---- SALVA PROFILO ----
-app.post("/saveProfile", (req, res) => {
-    const { email, username, classe, sezione, indirizzo, fotoprofilo } = req.body;
+// --- API ---
 
-    db.run(
-        `UPDATE users SET username=?, classe=?, sezione=?, indirizzo=?, fotoprofilo=? WHERE email=?`,
-        [username, classe, sezione, indirizzo, fotoprofilo, email],
-        (err) => {
-            if (err) return res.json({ success: false });
-            res.json({ success: true });
-        }
-    );
+// Login (solo controllo formato, password uguale per tutti)
+app.post("/api/login", (req, res) => {
+  const { email, password } = req.body;
+  if (!email.endsWith("@isisleonardodavincipoggiomarino.it")) {
+    return res.json({ ok: false, msg: "Email non valida" });
+  }
+  if (password !== "SG20513") {
+    return res.json({ ok: false, msg: "Password errata" });
+  }
+  return res.json({ ok: true });
 });
 
-// ---- OTTIENI PROFILO ----
-app.get("/profile/:email", (req, res) => {
-    db.get(
-        "SELECT * FROM users WHERE email = ?",
-        [req.params.email],
-        (err, row) => {
-            if (err) return res.json({ success: false });
-            res.json(row);
-        }
-    );
+// Salvataggio profilo
+app.post("/api/profile", (req, res) => {
+  const { email, username, classe, sezione, indirizzo, foto } = req.body;
+
+  const sql = `INSERT INTO users (email, username, classe, sezione, indirizzo, foto)
+               VALUES (?,?,?,?,?,?)
+               ON CONFLICT(email) DO UPDATE SET
+                 username=excluded.username,
+                 classe=excluded.classe,
+                 sezione=excluded.sezione,
+                 indirizzo=excluded.indirizzo,
+                 foto=excluded.foto;
+              `;
+
+  db.run(sql, [email, username, classe, sezione, indirizzo, foto], (err) => {
+    if (err) return res.json({ ok: false, msg: "Errore DB" });
+    res.json({ ok: true });
+  });
 });
 
-// ---- NUOVO POST ----
-app.post("/newPost", (req, res) => {
-    const { author, body, anonymous } = req.body;
-
-    db.run(
-        `INSERT INTO posts (author, body, timestamp, anonymous)
-         VALUES (?, ?, datetime('now','localtime'), ?)`,
-        [author, body, anonymous ? 1 : 0],
-        (err) => {
-            if (err) return res.json({ success: false });
-            res.json({ success: true });
-        }
-    );
+// Recupera profilo
+app.get("/api/profile/:email", (req, res) => {
+  db.get("SELECT * FROM users WHERE email=?", [req.params.email], (err, row) => {
+    if (err) return res.json({ ok: false });
+    res.json({ ok: true, profile: row });
+  });
 });
 
-// ---- OTTIENI TUTTI I POST ----
-app.get("/posts", (req, res) => {
-    db.all("SELECT * FROM posts ORDER BY id DESC", [], (err, rows) => {
-        if (err) return res.json([]);
-        res.json(rows);
-    });
+// Pubblicare un post
+app.post("/api/post", (req, res) => {
+  const { email, body, anonymous } = req.body;
+  const sql = `INSERT INTO posts (authorEmail, body, anonymous, timestamp)
+               VALUES (?,?,?,?)`;
+  db.run(sql, [email, body, anonymous ? 1 : 0, Date.now()], (err) => {
+    if (err) return res.json({ ok: false });
+    res.json({ ok: true });
+  });
 });
 
-// ---- CERCA PROFILO + POST ----
-app.get("/search/:query", (req, res) => {
-    const q = `%${req.params.query}%`;
+// Lista post
+app.get("/api/posts", (req, res) => {
+  const sql = `SELECT posts.*, users.username, users.foto
+               FROM posts LEFT JOIN users ON posts.authorEmail = users.email
+               ORDER BY timestamp DESC`;
 
-    db.all(
-        `SELECT * FROM users WHERE email LIKE ? OR username LIKE ?`,
-        [q, q],
-        (err, users) => {
-            if (err) return res.json([]);
-
-            // ottieni anche i messaggi di ogni user
-            let results = [];
-
-            let remaining = users.length;
-            if (remaining === 0) return res.json([]);
-
-            users.forEach((u) => {
-                db.all(
-                    "SELECT * FROM posts WHERE author=?",
-                    [u.email],
-                    (err2, posts) => {
-                        results.push({ user: u, posts });
-
-                        remaining--;
-                        if (remaining === 0) res.json(results);
-                    }
-                );
-            });
-        }
-    );
+  db.all(sql, [], (err, rows) => {
+    if (err) return res.json({ ok: false });
+    res.json({ ok: true, posts: rows });
+  });
 });
 
-// =======================
-//  SERVE index.html di default
-// =======================
-app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "index.html"));
+// Ricerca profili
+app.get("/api/search", (req, res) => {
+  const q = `%${req.query.q || ""}%`;
+  const sql = `SELECT * FROM users WHERE email LIKE ? OR username LIKE ?`;
+
+  db.all(sql, [q, q], (err, rows) => {
+    if (err) return res.json({ ok: false });
+    res.json({ ok: true, results: rows });
+  });
 });
 
-// =======================
-//  AVVIO SERVER
-// =======================
+// Recupera tutti i post di un utente
+app.get("/api/user-posts/:email", (req, res) => {
+  const sql = `SELECT * FROM posts WHERE authorEmail=? ORDER BY timestamp DESC`;
+  db.all(sql, [req.params.email], (err, rows) => {
+    if (err) return res.json({ ok: false });
+    res.json({ ok: true, posts: rows });
+  });
+});
+
+// Avvio server
 app.listen(PORT, () => {
-    console.log("Server avviato su http://localhost:" + PORT);
+  console.log(`Server avviato su porta ${PORT}`);
 });
+
