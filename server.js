@@ -1,3 +1,4 @@
+app.use(express.static(__dirname));
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
@@ -97,3 +98,4 @@ app.get('/users', (req,res)=>{
 });
 
 app.listen(port, ()=> console.log(`Server in ascolto su http://localhost:${port}`));
+
