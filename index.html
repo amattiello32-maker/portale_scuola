@@ -5,24 +5,24 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Portale Studenti — Accesso, Bacheca, Profilo e Ricerca</title>
 <style>
-:root{--bg:#f6f8ff;--card:#ffffff;--accent:#2563eb;--muted:#475569}
+:root{--bg:#f6f8ff;--card:#fff;--accent:#2563eb;--muted:#475569}
 *{box-sizing:border-box}
-body{font-size:18px;font-family:Inter,system-ui,Arial;margin:0;background:linear-gradient(180deg,var(--bg),#eef2ff);min-height:100vh;padding:24px}
-.card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 8px 30px rgba(15,23,42,0.06);margin-bottom:20px}
-label{display:block;font-size:13px;color:var(--muted);margin-top:10px}
-input[type="text"],input[type="email"],input[type="password"],textarea,select{width:100%;padding:10px;border:1px solid #e6edf9;border-radius:8px;font-size:14px}
-textarea{resize:vertical}
-button{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;background:var(--accent);color:#fff;margin-top:10px}
-.muted{color:var(--muted);font-size:13px}
-.hidden{display:none}
-.post{border-bottom:1px solid #eef2ff;padding:12px 0; display:flex; align-items:flex-start; gap:10px;}
-.post img{width:40px;height:40px;border-radius:50%;object-fit:cover;}
+body{font-family:Inter,system-ui,Arial;margin:0;padding:24px;background:linear-gradient(180deg,var(--bg),#eef2ff);}
+.card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 8px 30px rgba(15,23,42,0.06);margin-bottom:20px;}
+label{display:block;font-size:13px;color:var(--muted);margin-top:10px;}
+input[type=text],input[type=email],input[type=password],textarea,select{width:100%;padding:10px;border:1px solid #e6edf9;border-radius:8px;font-size:14px;}
+textarea{resize:vertical;}
+button{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;background:var(--accent);color:#fff;margin-top:10px;}
+.muted{color:var(--muted);font-size:13px;}
+.hidden{display:none;}
+.post{border-bottom:1px solid #eef2ff;padding:12px 0;display:flex;align-items:flex-start;gap:10px;}
+.post img{width:40px;height:40px;border-radius:50%;object-fit:cover;cursor:pointer;}
 .post-content{flex:1;}
-.meta{font-size:12px;color:#6b7280; margin-top:4px;}
-.actions{display:flex;gap:8px;align-items:center;margin-top:10px}
-.link{background:transparent;border:0;color:var(--muted);cursor:pointer;text-decoration:underline;}
-.username.tag{color:var(--accent);cursor:pointer;text-decoration:none;}
-#profileMsg{color:green;}
+.meta{font-size:12px;color:#6b7280;margin-top:4px;}
+.actions{display:flex;gap:8px;align-items:center;margin-top:10px;}
+.link{background:transparent;border:0;color:var(--muted);cursor:pointer;text-decoration:underline;font-size:14px;}
+a.tag{color:var(--accent);text-decoration:none;cursor:pointer;}
+.profile-popup{position:absolute;background:#fff;border:1px solid #e6edf9;padding:10px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,0.1);display:none;z-index:100;}
 </style>
 </head>
 <body>
@@ -30,18 +30,23 @@ button{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;background:var
 <!-- LOGIN -->
 <section id="page-login" class="card">
   <h2>Accesso Studenti</h2>
-  <p class="muted">Usa il tuo account istituzionale (dominio: <strong>@isisleonardodavincipoggiomarino.it</strong>). La password condivisa per il primo accesso è <strong>SG20513</strong>.</p>
+  <p class="muted">Usa il tuo account istituzionale (dominio: <strong>@isisleonardodavincipoggiomarino.it</strong>). La password iniziale è <strong>SG20513</strong>.</p>
   <form id="loginForm" autocomplete="off">
     <label for="email">Email</label>
     <input id="email" type="email" placeholder="nome.cognome@isisleonardodavincipoggiomarino.it" required />
     <label for="password">Password</label>
-    <input id="password" type="password" placeholder="Password" required />
+    <input id="password" type="password" placeholder="Inserisci la password" required />
     <button type="submit">Accedi</button>
     <div id="loginMsg" aria-live="polite" style="margin-top:10px"></div>
   </form>
-  <div id="resetDiv" class="hidden">
-    <button id="resetPasswordBtn">Reset password generale (SG20513)</button>
-  </div>
+</section>
+
+<!-- CAMBIO PASSWORD -->
+<section id="page-change-password" class="card hidden">
+  <h2>Cambia la tua password</h2>
+  <p class="muted">Questa è la prima volta che accedi. Inserisci una nuova password.</p>
+  <input type="password" id="newPassword" placeholder="Nuova password" />
+  <button id="savePasswordBtn">Salva Password</button>
 </section>
 
 <!-- BACHECA -->
@@ -49,8 +54,6 @@ button{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;background:var
   <section id="posts" class="card"></section>
   <div class="card">
     <h2>Bacheca della scuola</h2>
-    <p class="muted">Scrivi liberamente ciò che vuoi.</p>
-    <label for="body">Contenuto</label>
     <textarea id="body" rows="5" placeholder="Scrivi qui..."></textarea>
     <label><input type="checkbox" id="anonymous"> Pubblica in anonimo</label>
     <div class="actions">
@@ -97,33 +100,27 @@ button{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;background:var
 </section>
 
 <!-- POPUP PROFILO -->
-<div id="profilePopup" class="card hidden" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:999;width:300px">
-  <div style="text-align:center">
-    <img id="popupPic" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #e2e8f0;">
-    <h3 id="popupName"></h3>
-    <p id="popupClasse"></p>
-    <p id="popupIndirizzo"></p>
-    <button id="closePopup" class="link">Chiudi</button>
-  </div>
-</div>
+<div id="profilePopup" class="profile-popup"></div>
 
 <script>
 const API_URL='';
 
 // DOM
 const pageLogin=document.getElementById('page-login');
+const pageChangePwd=document.getElementById('page-change-password');
 const pageBoard=document.getElementById('page-board');
 const pageProfile=document.getElementById('page-profile');
 const pageSearch=document.getElementById('page-search');
+
 const loginForm=document.getElementById('loginForm');
 const emailInput=document.getElementById('email');
 const passwordInput=document.getElementById('password');
 const loginMsg=document.getElementById('loginMsg');
-const resetDiv=document.getElementById('resetDiv');
-const resetPasswordBtn=document.getElementById('resetPasswordBtn');
+
 const postBtn=document.getElementById('postBtn');
 const bodyInput=document.getElementById('body');
 const postsEl=document.getElementById('posts');
+
 const logoutBtn=document.getElementById('logoutBtn');
 const gotoProfile=document.getElementById('gotoProfile');
 const gotoSearch=document.getElementById('gotoSearch');
@@ -145,194 +142,194 @@ const searchResults=document.getElementById('searchResults');
 const backBoardFromSearch=document.getElementById('backBoardFromSearch');
 
 const profilePopup=document.getElementById('profilePopup');
-const popupPic=document.getElementById('popupPic');
-const popupName=document.getElementById('popupName');
-const popupClasse=document.getElementById('popupClasse');
-const popupIndirizzo=document.getElementById('popupIndirizzo');
-const closePopup=document.getElementById('closePopup');
+const newPasswordInput=document.getElementById('newPassword');
+const savePasswordBtn=document.getElementById('savePasswordBtn');
 
 let currentUser=null;
 
-function showPage(page){ pageLogin.classList.add('hidden'); pageBoard.classList.add('hidden'); pageProfile.classList.add('hidden'); pageSearch.classList.add('hidden'); page.classList.remove('hidden'); }
+function showPage(page){
+  pageLogin.classList.add('hidden');
+  pageChangePwd.classList.add('hidden');
+  pageBoard.classList.add('hidden');
+  pageProfile.classList.add('hidden');
+  pageSearch.classList.add('hidden');
+  page.classList.remove('hidden');
+}
 
 // LOGIN
-loginForm.addEventListener('submit', e=>{
+loginForm.addEventListener('submit', async e=>{
   e.preventDefault();
   const email=emailInput.value.trim();
   const password=passwordInput.value.trim();
-  fetch(`${API_URL}/login`,{
+  if(!email.endsWith('@isisleonardodavincipoggiomarino.it')) { loginMsg.textContent='Email non valida'; return; }
+  const res=await fetch(`${API_URL}/login`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({email,password})
-  }).then(res=>res.json()).then(data=>{
-    if(data.success){
-      currentUser=data.user;
-      localStorage.setItem('student_user',JSON.stringify(currentUser));
-      p_username.value=currentUser.username;
-      p_classe.value=currentUser.classe||'';
-      p_sezione.value=currentUser.sezione||'';
-      p_indirizzo.value=currentUser.indirizzo||'';
-      profilePicPreview.src=currentUser.profile_pic||'';
-      showPage(pageBoard);
-      renderPosts();
-      if(data.first_login){
-        const newPassword=prompt("Primo accesso! Inserisci nuova password:");
-        if(newPassword){
-          fetch(`${API_URL}/updatePassword`,{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({user_id:currentUser.id,new_password:newPassword})
-          }).then(()=>alert("Password aggiornata."));
-        }
-      }
-    }else{
-      loginMsg.textContent=data.message;
-      if(data.failed_attempts>=3){
-        resetDiv.classList.remove('hidden');
-      }
-    }
   });
+  const data=await res.json();
+  if(data.success){
+    currentUser=data.user;
+    localStorage.setItem('student_user',JSON.stringify(currentUser));
+    if(data.first_login){ showPage(pageChangePwd); return; }
+    loadProfileData();
+    renderPosts();
+    showPage(pageBoard);
+  } else loginMsg.textContent=data.message;
 });
 
-// RESET PASSWORD
-resetPasswordBtn.addEventListener('click',()=>{
-  if(confirm("Vuoi resettare la password?")){
-    fetch(`${API_URL}/resetPassword`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email:emailInput.value.trim()})
-    }).then(()=>alert("Password resettata."));
+// PRIMO CAMBIO PASSWORD
+savePasswordBtn.addEventListener('click', async ()=>{
+  const newPwd=newPasswordInput.value.trim();
+  if(!newPwd){ alert('Inserisci una password'); return; }
+  const res=await fetch(`${API_URL}/updatePassword`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({user_id:currentUser.id,new_password:newPwd})
+  });
+  const data=await res.json();
+  if(data.success){
+    currentUser=data.user;
+    localStorage.setItem('student_user',JSON.stringify(currentUser));
+    loadProfileData();
+    renderPosts();
+    showPage(pageBoard);
   }
 });
 
+// CARICA PROFILO
+function loadProfileData(){
+  p_username.value=currentUser.username;
+  p_classe.value=currentUser.classe||'';
+  p_sezione.value=currentUser.sezione||'';
+  p_indirizzo.value=currentUser.indirizzo||'';
+  profilePicPreview.src=currentUser.profile_pic||'';
+}
+
 // BACHECA
-postBtn.addEventListener('click',()=>{
+postBtn.addEventListener('click', async ()=>{
   const body=bodyInput.value.trim();
   const anon=document.getElementById('anonymous').checked;
-  if(!body) return alert('Scrivi un messaggio');
-  fetch(`${API_URL}/post`,{
+  if(!body){ alert('Scrivi un messaggio'); return; }
+  await fetch(`${API_URL}/post`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({user_id:currentUser.id,body,anonymous:anon})
-  }).then(()=>{ bodyInput.value=''; renderPosts(); });
+  });
+  bodyInput.value='';
+  document.getElementById('anonymous').checked=false;
+  renderPosts();
 });
 
-logoutBtn.addEventListener('click',()=>{ localStorage.removeItem('student_user'); currentUser=null; showPage(pageLogin); });
-gotoProfile.addEventListener('click',()=>{ showPage(pageProfile); });
-gotoSearch.addEventListener('click',()=>{ showPage(pageSearch); });
+// ELIMINA PROFILO
+deleteProfile.addEventListener('click', async ()=>{
+  if(confirm('Vuoi eliminare definitivamente il tuo profilo?')) {
+    await fetch(`${API_URL}/deleteProfile`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({user_id:currentUser.id})
+    });
+    localStorage.removeItem('student_user');
+    currentUser=null;
+    showPage(pageLogin);
+  }
+});
+
+// LOGOUT
+logoutBtn.addEventListener('click', ()=>{
+  localStorage.removeItem('student_user');
+  currentUser=null;
+  showPage(pageLogin);
+});
 
 // PROFILO
-profileForm.addEventListener('submit',e=>{
+profileForm.addEventListener('submit', async e=>{
   e.preventDefault();
   const formData={username:p_username.value,classe:p_classe.value,sezione:p_sezione.value,indirizzo:p_indirizzo.value};
-  fetch(`${API_URL}/updateProfile?id=${currentUser.id}`,{
+  await fetch(`${API_URL}/updateProfile?id=${currentUser.id}`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(formData)
-  }).then(res=>res.json()).then(data=>{
-    if(data.success){
-      profileMsg.textContent='Profilo aggiornato';
-      profilePicPreview.src=data.user.profile_pic||'';
-      currentUser=data.user;
-      localStorage.setItem('student_user',JSON.stringify(currentUser));
-      renderPosts();
-    }
   });
+  profileMsg.innerHTML='<span style="color:green">Profilo aggiornato</span>';
+  currentUser={...currentUser,...formData};
+  renderPosts();
 });
 
-p_pic.addEventListener('change',()=>{
+// FOTO PROFILO
+p_pic.addEventListener('change', ()=>{
   const file=p_pic.files[0];
+  if(!file) return;
   const reader=new FileReader();
-  reader.onload=()=>{ profilePicPreview.src=reader.result;
-    fetch(`${API_URL}/updateProfile?id=${currentUser.id}`,{
+  reader.onload=async ()=>{
+    profilePicPreview.src=reader.result;
+    currentUser.profile_pic=reader.result;
+    await fetch(`${API_URL}/updateProfile?id=${currentUser.id}`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({profile_pic:reader.result})
     });
-  }
+  };
   reader.readAsDataURL(file);
 });
 
-backBoard.addEventListener('click',()=>{ showPage(pageBoard); });
+// TORNA ALLA BACHECA
+backBoard.addEventListener('click', ()=>showPage(pageBoard));
+gotoProfile.addEventListener('click', ()=>{ loadProfileData(); showPage(pageProfile); });
+gotoSearch.addEventListener('click', ()=>showPage(pageSearch));
+backBoardFromSearch.addEventListener('click', ()=>showPage(pageBoard));
 
-deleteProfile.addEventListener('click',()=>{
-  if(confirm("Vuoi eliminare definitivamente il tuo profilo?")){
-    fetch(`${API_URL}/deleteProfile`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({user_id:currentUser.id})
-    }).then(()=>{ localStorage.removeItem('student_user'); currentUser=null; showPage(pageLogin); });
-  }
-});
-
-// RICERCA PROFILI
-searchBtn.addEventListener('click',()=>{
+// CERCA PROFILI
+searchBtn.addEventListener('click', async ()=>{
   const q=searchInput.value.trim().toLowerCase();
   searchResults.innerHTML='';
-  fetch(`${API_URL}/users`).then(res=>res.json()).then(users=>{
-    users.filter(u=>u.username.toLowerCase().includes(q)).forEach(u=>{
-      const div=document.createElement('div');
-      div.className='card';
-      fetch(`${API_URL}/posts`).then(res=>res.json()).then(posts=>{
-        const userPosts=posts.filter(p=>p.user_id===u.id && p.anonymous===0);
-        div.innerHTML=`<img src='${u.profile_pic||''}' style='width:40px;height:40px;border-radius:50%;margin-right:10px;vertical-align:middle;cursor:pointer;' class="popupTrigger" data-id="${u.id}"/> <strong class="popupTrigger" data-id="${u.id}" style="cursor:pointer;">${u.username}</strong> - Classe ${u.classe}${u.sezione} - ${u.indirizzo}<br><hr>${userPosts.map(p=>p.body).join('<br>')||'Nessun messaggio'}`;
-        searchResults.appendChild(div);
-      });
+  const res=await fetch(`${API_URL}/users`);
+  const users=await res.json();
+  users.filter(u=>u.username.toLowerCase().includes(q)).forEach(u=>{
+    const div=document.createElement('div');
+    div.className='card';
+    div.innerHTML=`<img src='${u.profile_pic||''}' data-id='${u.id}'/><strong data-id='${u.id}'>${u.username}</strong> - Classe ${u.classe}${u.sezione} - ${u.indirizzo}`;
+    div.querySelectorAll('strong,img').forEach(el=>{
+      el.addEventListener('click', ()=>showProfilePopup(u));
     });
+    searchResults.appendChild(div);
   });
 });
-
-backBoardFromSearch.addEventListener('click',()=>{ showPage(pageBoard); });
 
 // POPUP PROFILO
-document.addEventListener('click', e=>{
-  if(e.target.classList.contains('popupTrigger')){
-    const id=e.target.dataset.id;
-    fetch(`${API_URL}/users`).then(res=>res.json()).then(users=>{
-      const u=users.find(u=>u.id==id);
-      if(u){
-        popupPic.src=u.profile_pic||'';
-        popupName.textContent=u.username;
-        popupClasse.textContent=`Classe: ${u.classe}${u.sezione}`;
-        popupIndirizzo.textContent=`Indirizzo: ${u.indirizzo}`;
-        profilePopup.classList.remove('hidden');
-      }
-    });
-  }
-});
-closePopup.addEventListener('click',()=>{ profilePopup.classList.add('hidden'); });
+function showProfilePopup(user){
+  profilePopup.style.display='block';
+  profilePopup.innerHTML=`<img src='${user.profile_pic||''}' style='width:80px;height:80px;border-radius:50%;'/><strong>${user.username}</strong><br>Classe ${user.classe}${user.sezione}<br>${user.indirizzo}`;
+  profilePopup.style.top=event.pageY+'px';
+  profilePopup.style.left=event.pageX+'px';
+  setTimeout(()=>profilePopup.style.display='none',5000);
+}
 
-// RENDER POSTS
-function renderPosts(){
-  fetch(`${API_URL}/posts`).then(res=>res.json()).then(posts=>{
-    postsEl.innerHTML='';
-    posts.forEach(p=>{
-      const username = p.anonymous ? 'Anonimo' : p.username;
-      const profileImg = p.anonymous ? '' : p.profile_pic||'';
-      const postDiv=document.createElement('div');
-      postDiv.className='post';
-      let bodyHTML = p.body.replace(/@([a-zA-Z0-9_.]+)/g, `<a href="#" class="username tag" data-username="$1">@$1</a>`);
-      postDiv.innerHTML=`${profileImg?`<img src="${profileImg}"/>`:''}<div class='post-content'><strong>${username}</strong><div>${bodyHTML}</div><div class='meta'>${new Date(p.timestamp).toLocaleString()}</div><div><span class="link" style="color:gray;text-decoration:underline;" onclick="deletePost(${p.id})">Elimina</span></div></div>`;
-      postsEl.appendChild(postDiv);
-    });
+// RENDER POST
+async function renderPosts(){
+  const res=await fetch(`${API_URL}/posts`);
+  const posts=await res.json();
+  postsEl.innerHTML='';
+  posts.forEach(p=>{
+    const div=document.createElement('div');
+    div.className='post';
+    let userName=p.anonymous?'Anonimo':p.username;
+    let userPic=p.anonymous?'':'<img src="'+(p.profile_pic||'')+'" data-id="'+p.user_id+'"/>';
+    div.innerHTML=`${userPic}<div class='post-content'><strong data-id='${p.user_id}'>${userName}</strong><div>${parseTags(p.body)}</div><div class='meta'>${new Date(p.timestamp).toLocaleString()} <span class='link' data-id='${p.id}'>Elimina</span></div></div>`;
+    div.querySelectorAll('strong[data-id]').forEach(el=>{ el.addEventListener('click', ()=>showProfilePopup({id:el.dataset.id,username:el.textContent})) });
+    div.querySelector('.link')?.addEventListener('click', async ()=>{ await fetch(`${API_URL}/deletePost`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({post_id:p.id})}); renderPosts(); });
+    postsEl.appendChild(div);
   });
 }
 
-function deletePost(id){
-  if(confirm("Eliminare questo messaggio?")){
-    fetch(`${API_URL}/deletePost`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({post_id:id})
-    }).then(()=>renderPosts());
-  }
+// RICONOSCE TAG @username
+function parseTags(text){
+  return text.replace(/@([a-zA-Z0-9._]+)/g, '<a class="tag">@$1</a>');
 }
 
-// AUTO LOGIN
-const storedUser=localStorage.getItem('student_user');
-if(storedUser){ currentUser=JSON.parse(storedUser); showPage(pageBoard); renderPosts(); }
+// CARICAMENTO AUTOMATICO
+const savedUser=localStorage.getItem('student_user');
+if(savedUser){ currentUser=JSON.parse(savedUser); loadProfileData(); renderPosts(); showPage(pageBoard); }
 </script>
 </body>
 </html>
-
-
