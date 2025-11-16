@@ -30,7 +30,7 @@ button{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;background:var
 <!-- LOGIN -->
 <section id="page-login" class="card">
   <h2>Accesso Studenti</h2>
-  <p class="muted">Usa il tuo account istituzionale (dominio: <strong>@isisleonardodavincipoggiomarino.it</strong>). La password condivisa è <strong>SG20513</strong>.</p>
+  <p class="muted">Usa il tuo account istituzionale (dominio: <strong>@isisleonardodavincipoggiomarino.it</strong>). La password condivisa per il primo accesso è <strong>SG20513</strong>.</p>
   <form id="loginForm" autocomplete="off">
     <label for="email">Email</label>
     <input id="email" type="email" placeholder="nome.cognome@isisleonardodavincipoggiomarino.it" required />
@@ -49,7 +49,7 @@ button{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;background:var
   <section id="posts" class="card"></section>
   <div class="card">
     <h2>Bacheca della scuola</h2>
-    <p class="muted">Scrivi liberamente: puoi postare con il tuo account o in anonimo. Usa <strong>@username</strong> per taggare.</p>
+    <p class="muted">Scrivi liberamente ciò che vuoi.</p>
     <label for="body">Contenuto</label>
     <textarea id="body" rows="5" placeholder="Scrivi qui..."></textarea>
     <label><input type="checkbox" id="anonymous"> Pubblica in anonimo</label>
@@ -334,3 +334,4 @@ if(storedUser){ currentUser=JSON.parse(storedUser); showPage(pageBoard); renderP
 </script>
 </body>
 </html>
+
