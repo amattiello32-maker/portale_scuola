@@ -3,8 +3,6 @@ const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
-const multer = require('multer'); // Per upload immagini
-const fs = require('fs');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -13,24 +11,9 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
-
-// Serve file statici (index.html, css, js, uploads)
 app.use(express.static(__dirname));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Configurazione multer per salvare le immagini in uploads/
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, Date.now() + ext);
-  }
-});
-const upload = multer({ storage });
-
-// Database SQLite
+// Database
 const db = new sqlite3.Database('school.db');
 
 db.serialize(() => {
@@ -42,7 +25,8 @@ db.serialize(() => {
     sezione TEXT,
     indirizzo TEXT,
     password TEXT,
-    profile_pic TEXT
+    profile_pic TEXT,
+    first_login INTEGER DEFAULT 1
   )`);
 
   db.run(`CREATE TABLE IF NOT EXISTS posts (
@@ -60,70 +44,110 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// LOGIN
-app.post('/login', (req, res) => {
+// LOGIN con obbligo dominio e cambio password al primo accesso
+app.post('/login', (req,res)=>{
   const { email, password } = req.body;
-  db.get(`SELECT * FROM users WHERE email=?`, [email], (err, row) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (row) {
-      if (password === row.password) return res.json({ success: true, user: row });
-      else return res.json({ success: false, message: 'Password errata' });
+
+  // Controllo dominio
+  if(!email.endsWith('@isisleonardodavincipoggiomarino.it')){
+    return res.json({success:false,message:'Usa solo account istituzionale valido'});
+  }
+
+  db.get(`SELECT * FROM users WHERE email=?`, [email], (err,row)=>{
+    if(err) return res.status(500).json({error: err.message});
+
+    if(row){
+      if(password !== row.password){
+        return res.json({success:false,message:'Password errata'});
+      } else {
+        return res.json({success:true,user:row,first_login:row.first_login});
+      }
     } else {
-      // Crea nuovo utente se non esiste
-      db.run(`INSERT INTO users (email,password,username) VALUES (?,?,?)`, [email, password, email.split('@')[0]], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        db.get(`SELECT * FROM users WHERE id=?`, [this.lastID], (err2, row2) => res.json({ success: true, user: row2 }));
+      // Nuovo utente, salva password temporanea
+      db.run(`INSERT INTO users (email,password,username) VALUES (?,?,?)`, [email,password,email.split('@')[0]], function(err){
+        if(err) return res.status(500).json({error:err.message});
+        db.get(`SELECT * FROM users WHERE id=?`, [this.lastID], (err2,row2)=>{
+          res.json({success:true,user:row2,first_login:1});
+        });
       });
     }
   });
 });
 
-// UPDATE PROFILO + upload immagine
-app.post('/updateProfile', upload.single('profile_pic'), (req, res) => {
+// UPDATE PASSWORD (dopo primo login)
+app.post('/updatePassword', (req,res)=>{
+  const { user_id, new_password } = req.body;
+  db.run(`UPDATE users SET password=?, first_login=0 WHERE id=?`, [new_password,user_id], function(err){
+    if(err) return res.status(500).json({error:err.message});
+    res.json({success:true});
+  });
+});
+
+// UPDATE PROFILO
+app.post('/updateProfile', (req,res)=>{
   const id = req.query.id;
-  const { username, classe, sezione, indirizzo } = req.body;
+  const { username, classe, sezione, indirizzo, profile_pic } = req.body;
   const updates = [];
   const params = [];
 
-  if (username) { updates.push("username=?"); params.push(username); }
-  if (classe) { updates.push("classe=?"); params.push(classe); }
-  if (sezione) { updates.push("sezione=?"); params.push(sezione); }
-  if (indirizzo) { updates.push("indirizzo=?"); params.push(indirizzo); }
-  if (req.file) { updates.push("profile_pic=?"); params.push(`/uploads/${req.file.filename}`); }
+  if(username){ updates.push("username=?"); params.push(username); }
+  if(classe){ updates.push("classe=?"); params.push(classe); }
+  if(sezione){ updates.push("sezione=?"); params.push(sezione); }
+  if(indirizzo){ updates.push("indirizzo=?"); params.push(indirizzo); }
+  if(profile_pic){ updates.push("profile_pic=?"); params.push(profile_pic); }
 
-  if (updates.length === 0) return res.json({ success: false, message: 'Nessun dato da aggiornare' });
+  if(updates.length===0) return res.json({success:false,message:'Nessun dato da aggiornare'});
   params.push(id);
 
-  db.run(`UPDATE users SET ${updates.join(',')} WHERE id=?`, params, function (err) {
-    if (err) return res.status(500).json({ error: err.message });
-    db.get(`SELECT * FROM users WHERE id=?`, [id], (err, row) => res.json({ success: true, user: row }));
+  db.run(`UPDATE users SET ${updates.join(',')} WHERE id=?`, params, function(err){
+    if(err) return res.status(500).json({error:err.message});
+    db.get(`SELECT * FROM users WHERE id=?`, [id], (err,row)=>res.json({success:true,user:row}));
+  });
+});
+
+// ELIMINA PROFILO
+app.post('/deleteProfile', (req,res)=>{
+  const { user_id } = req.body;
+  db.run(`DELETE FROM users WHERE id=?`, [user_id], function(err){
+    if(err) return res.status(500).json({error:err.message});
+    db.run(`DELETE FROM posts WHERE user_id=?`, [user_id], function(){});
+    res.json({success:true});
   });
 });
 
 // INSERIMENTO POST
-app.post('/post', (req, res) => {
+app.post('/post', (req,res)=>{
   const { user_id, body, anonymous } = req.body;
-  db.run(`INSERT INTO posts (user_id, body, anonymous) VALUES (?,?,?)`, [user_id, body, anonymous ? 1 : 0], function (err) {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ success: true, post_id: this.lastID });
+  db.run(`INSERT INTO posts (user_id, body, anonymous) VALUES (?,?,?)`, [user_id, body, anonymous?1:0], function(err){
+    if(err) return res.status(500).json({error:err.message});
+    res.json({success:true,post_id:this.lastID});
+  });
+});
+
+// ELIMINA POST
+app.post('/deletePost', (req,res)=>{
+  const { post_id } = req.body;
+  db.run(`DELETE FROM posts WHERE id=?`, [post_id], function(err){
+    if(err) return res.status(500).json({error:err.message});
+    res.json({success:true});
   });
 });
 
 // OTTIENI POST
-app.get('/posts', (req, res) => {
-  db.all(`SELECT posts.*, users.username, users.profile_pic FROM posts JOIN users ON posts.user_id = users.id ORDER BY timestamp DESC`, [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
+app.get('/posts', (req,res)=>{
+  db.all(`SELECT posts.*, users.username, users.profile_pic FROM posts JOIN users ON posts.user_id = users.id ORDER BY timestamp DESC`, [], (err, rows)=>{
+    if(err) return res.status(500).json({error:err.message});
     res.json(rows);
   });
 });
 
 // LISTA UTENTI
-app.get('/users', (req, res) => {
-  db.all(`SELECT id,username,classe,sezione,indirizzo,profile_pic FROM users`, [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
+app.get('/users', (req,res)=>{
+  db.all(`SELECT id,username,classe,sezione,indirizzo,profile_pic FROM users`, [], (err, rows)=>{
+    if(err) return res.status(500).json({error:err.message});
     res.json(rows);
   });
 });
 
 // AVVIO SERVER
-app.listen(port, () => console.log(`Server in ascolto sulla porta ${port}`));
+app.listen(port, ()=> console.log(`Server in ascolto sulla porta ${port}`));
