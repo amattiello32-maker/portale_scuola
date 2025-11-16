@@ -196,12 +196,12 @@ loginForm.addEventListener('submit', e=>{
 
 // RESET PASSWORD
 resetPasswordBtn.addEventListener('click',()=>{
-  if(confirm("Vuoi resettare la password generale SG20513?")){
+  if(confirm("Vuoi resettare la password?")){
     fetch(`${API_URL}/resetPassword`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({email:emailInput.value.trim()})
-    }).then(()=>alert("Password resettata, usa SG20513 per accedere."));
+    }).then(()=>alert("Password resettata."));
   }
 });
 
@@ -334,4 +334,5 @@ if(storedUser){ currentUser=JSON.parse(storedUser); showPage(pageBoard); renderP
 </script>
 </body>
 </html>
+
 
