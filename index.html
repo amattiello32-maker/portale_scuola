@@ -5,24 +5,25 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Portale Studenti — Accesso, Bacheca, Profilo e Ricerca</title>
 <style>
-:root{--bg:#f6f8ff;--card:#fff;--accent:#2563eb;--muted:#475569}
+:root{--bg:#f6f8ff;--card:#ffffff;--accent:#2563eb;--muted:#475569}
 *{box-sizing:border-box}
-body{font-family:Inter,system-ui,Arial;margin:0;padding:24px;background:linear-gradient(180deg,var(--bg),#eef2ff);}
-.card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 8px 30px rgba(15,23,42,0.06);margin-bottom:20px;}
-label{display:block;font-size:13px;color:var(--muted);margin-top:10px;}
-input[type=text],input[type=email],input[type=password],textarea,select{width:100%;padding:10px;border:1px solid #e6edf9;border-radius:8px;font-size:14px;}
-textarea{resize:vertical;}
-button{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;background:var(--accent);color:#fff;margin-top:10px;}
-.muted{color:var(--muted);font-size:13px;}
-.hidden{display:none;}
-.post{border-bottom:1px solid #eef2ff;padding:12px 0;display:flex;align-items:flex-start;gap:10px;}
-.post img{width:40px;height:40px;border-radius:50%;object-fit:cover;cursor:pointer;}
+body{font-size:18px;font-family:Inter,system-ui,Arial;margin:0;background:linear-gradient(180deg,var(--bg),#eef2ff);min-height:100vh;padding:24px}
+.card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 8px 30px rgba(15,23,42,0.06);margin-bottom:20px}
+label{display:block;font-size:13px;color:var(--muted);margin-top:10px}
+input[type="text"],input[type="email"],input[type="password"],textarea,select{width:100%;padding:10px;border:1px solid #e6edf9;border-radius:8px;font-size:14px}
+textarea{resize:vertical}
+button{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;background:var(--accent);color:#fff;margin-top:10px}
+.muted{color:var(--muted);font-size:13px}
+.hidden{display:none}
+.post{border-bottom:1px solid #eef2ff;padding:12px 0; display:flex; align-items:flex-start; gap:10px;}
+.post img{width:40px;height:40px;border-radius:50%;object-fit:cover;}
 .post-content{flex:1;}
-.meta{font-size:12px;color:#6b7280;margin-top:4px;}
-.actions{display:flex;gap:8px;align-items:center;margin-top:10px;}
-.link{background:transparent;border:0;color:var(--muted);cursor:pointer;text-decoration:underline;font-size:14px;}
-a.tag{color:var(--accent);text-decoration:none;cursor:pointer;}
-.profile-popup{position:absolute;background:#fff;border:1px solid #e6edf9;padding:10px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,0.1);display:none;z-index:100;}
+.meta{font-size:12px;color:#6b7280; margin-top:4px;}
+.actions{display:flex;gap:8px;align-items:center;margin-top:10px}
+.link{background:transparent;border:0;color:#6b7280;text-decoration:underline;cursor:pointer}
+.search-user img{width:50px;height:50px;border-radius:50%;object-fit:cover;margin-right:10px;vertical-align:middle;}
+.popup-profile{position:absolute;background:#fff;padding:12px;border-radius:12px;box-shadow:0 5px 20px rgba(0,0,0,0.2);z-index:999;display:none;}
+.success-msg{color:green;font-size:14px;margin-top:6px;}
 </style>
 </head>
 <body>
@@ -35,18 +36,18 @@ a.tag{color:var(--accent);text-decoration:none;cursor:pointer;}
     <label for="email">Email</label>
     <input id="email" type="email" placeholder="nome.cognome@isisleonardodavincipoggiomarino.it" required />
     <label for="password">Password</label>
-    <input id="password" type="password" placeholder="Inserisci la password" required />
+    <input id="password" type="password" placeholder="Password" required />
     <button type="submit">Accedi</button>
     <div id="loginMsg" aria-live="polite" style="margin-top:10px"></div>
   </form>
-</section>
 
-<!-- CAMBIO PASSWORD -->
-<section id="page-change-password" class="card hidden">
-  <h2>Cambia la tua password</h2>
-  <p class="muted">Questa è la prima volta che accedi. Inserisci una nuova password.</p>
-  <input type="password" id="newPassword" placeholder="Nuova password" />
-  <button id="savePasswordBtn">Salva Password</button>
+  <div id="resetPasswordDiv" class="hidden card">
+    <h3>Reset Password</h3>
+    <p>Hai superato 3 tentativi errati. Inserisci la password generale per resettare:</p>
+    <label for="resetPassInput">Password generale</label>
+    <input id="resetPassInput" type="password" />
+    <button id="resetPassBtn">Reset Password</button>
+  </div>
 </section>
 
 <!-- BACHECA -->
@@ -54,6 +55,8 @@ a.tag{color:var(--accent);text-decoration:none;cursor:pointer;}
   <section id="posts" class="card"></section>
   <div class="card">
     <h2>Bacheca della scuola</h2>
+    <p class="muted">Scrivi liberamente: puoi postare con il tuo account o in anonimo.</p>
+    <label for="body">Contenuto</label>
     <textarea id="body" rows="5" placeholder="Scrivi qui..."></textarea>
     <label><input type="checkbox" id="anonymous"> Pubblica in anonimo</label>
     <div class="actions">
@@ -83,9 +86,9 @@ a.tag{color:var(--accent);text-decoration:none;cursor:pointer;}
     <label for="p_indirizzo">Indirizzo</label>
     <select id="p_indirizzo"><option value="">-- seleziona --</option><option>OSA</option><option>AFM</option><option>SIA</option><option>Q</option><option>CAT</option><option>ITI</option><option>LC</option><option>LL</option><option>LS</option></select>
     <button type="submit">Salva Profilo</button>
-    <button type="button" id="deleteProfile" class="link">Elimina Profilo</button>
+    <button type="button" id="deleteProfileBtn" class="link">Elimina Profilo</button>
     <button type="button" id="backBoard" class="link">Torna alla Bacheca</button>
-    <div id="profileMsg" class="muted" style="margin-top:10px"></div>
+    <div id="profileMsg" class="success-msg"></div>
   </form>
 </section>
 
@@ -99,15 +102,9 @@ a.tag{color:var(--accent);text-decoration:none;cursor:pointer;}
   <button id="backBoardFromSearch" class="link">Torna alla Bacheca</button>
 </section>
 
-<!-- POPUP PROFILO -->
-<div id="profilePopup" class="profile-popup"></div>
-
 <script>
 const API_URL='';
-
-// DOM
 const pageLogin=document.getElementById('page-login');
-const pageChangePwd=document.getElementById('page-change-password');
 const pageBoard=document.getElementById('page-board');
 const pageProfile=document.getElementById('page-profile');
 const pageSearch=document.getElementById('page-search');
@@ -116,11 +113,13 @@ const loginForm=document.getElementById('loginForm');
 const emailInput=document.getElementById('email');
 const passwordInput=document.getElementById('password');
 const loginMsg=document.getElementById('loginMsg');
+const resetPasswordDiv=document.getElementById('resetPasswordDiv');
+const resetPassInput=document.getElementById('resetPassInput');
+const resetPassBtn=document.getElementById('resetPassBtn');
 
 const postBtn=document.getElementById('postBtn');
 const bodyInput=document.getElementById('body');
 const postsEl=document.getElementById('posts');
-
 const logoutBtn=document.getElementById('logoutBtn');
 const gotoProfile=document.getElementById('gotoProfile');
 const gotoSearch=document.getElementById('gotoSearch');
@@ -134,202 +133,187 @@ const p_indirizzo=document.getElementById('p_indirizzo');
 const profileForm=document.getElementById('profileForm');
 const profileMsg=document.getElementById('profileMsg');
 const backBoard=document.getElementById('backBoard');
-const deleteProfile=document.getElementById('deleteProfile');
+const deleteProfileBtn=document.getElementById('deleteProfileBtn');
 
 const searchInput=document.getElementById('searchInput');
 const searchBtn=document.getElementById('searchBtn');
 const searchResults=document.getElementById('searchResults');
 const backBoardFromSearch=document.getElementById('backBoardFromSearch');
 
-const profilePopup=document.getElementById('profilePopup');
-const newPasswordInput=document.getElementById('newPassword');
-const savePasswordBtn=document.getElementById('savePasswordBtn');
-
+let loginAttempts = parseInt(localStorage.getItem('loginAttempts')||'0');
 let currentUser=null;
 
-function showPage(page){
-  pageLogin.classList.add('hidden');
-  pageChangePwd.classList.add('hidden');
-  pageBoard.classList.add('hidden');
-  pageProfile.classList.add('hidden');
-  pageSearch.classList.add('hidden');
-  page.classList.remove('hidden');
-}
+function showPage(page){ pageLogin.classList.add('hidden'); pageBoard.classList.add('hidden'); pageProfile.classList.add('hidden'); pageSearch.classList.add('hidden'); resetPasswordDiv.classList.add('hidden'); page.classList.remove('hidden'); }
 
 // LOGIN
-loginForm.addEventListener('submit', async e=>{
+loginForm.addEventListener('submit', e=>{
   e.preventDefault();
   const email=emailInput.value.trim();
   const password=passwordInput.value.trim();
-  if(!email.endsWith('@isisleonardodavincipoggiomarino.it')) { loginMsg.textContent='Email non valida'; return; }
-  const res=await fetch(`${API_URL}/login`,{
+  fetch(`${API_URL}/login`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({email,password})
+  }).then(res=>res.json()).then(data=>{
+    if(data.success){
+      loginAttempts=0;
+      localStorage.setItem('loginAttempts','0');
+      currentUser=data.user;
+      localStorage.setItem('student_user',JSON.stringify(currentUser));
+      loadProfile();
+      renderPosts();
+      showPage(pageBoard);
+    }else{
+      loginAttempts++;
+      localStorage.setItem('loginAttempts',loginAttempts);
+      if(loginAttempts>=3){
+        resetPasswordDiv.classList.remove('hidden');
+        loginForm.classList.add('hidden');
+        loginMsg.textContent='';
+      }else{
+        loginMsg.textContent=`Tentativo errato. Tentativi rimasti: ${3-loginAttempts}`;
+      }
+    }
   });
-  const data=await res.json();
-  if(data.success){
-    currentUser=data.user;
-    localStorage.setItem('student_user',JSON.stringify(currentUser));
-    if(data.first_login){ showPage(pageChangePwd); return; }
-    loadProfileData();
-    renderPosts();
-    showPage(pageBoard);
-  } else loginMsg.textContent=data.message;
 });
 
-// PRIMO CAMBIO PASSWORD
-savePasswordBtn.addEventListener('click', async ()=>{
-  const newPwd=newPasswordInput.value.trim();
-  if(!newPwd){ alert('Inserisci una password'); return; }
-  const res=await fetch(`${API_URL}/updatePassword`,{
+// RESET PASSWORD
+resetPassBtn.addEventListener('click', ()=>{
+  if(resetPassInput.value!=='SG20513'){ alert('Password generale errata'); return; }
+  fetch(`${API_URL}/resetPassword`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({user_id:currentUser.id,new_password:newPwd})
+    body:JSON.stringify({email:emailInput.value.trim(),password:'SG20513'})
+  }).then(res=>res.json()).then(data=>{
+    if(data.success){
+      alert('Password resettata. Ora puoi fare il login con SG20513');
+      loginAttempts=0;
+      localStorage.setItem('loginAttempts','0');
+      resetPasswordDiv.classList.add('hidden');
+      loginForm.classList.remove('hidden');
+      passwordInput.value='';
+    }
   });
-  const data=await res.json();
-  if(data.success){
-    currentUser=data.user;
-    localStorage.setItem('student_user',JSON.stringify(currentUser));
-    loadProfileData();
-    renderPosts();
-    showPage(pageBoard);
-  }
 });
 
-// CARICA PROFILO
-function loadProfileData(){
-  p_username.value=currentUser.username;
+// PROFILO
+function loadProfile(){
+  if(!currentUser) return;
+  p_username.value=currentUser.username||'';
   p_classe.value=currentUser.classe||'';
   p_sezione.value=currentUser.sezione||'';
   p_indirizzo.value=currentUser.indirizzo||'';
   profilePicPreview.src=currentUser.profile_pic||'';
 }
 
-// BACHECA
-postBtn.addEventListener('click', async ()=>{
-  const body=bodyInput.value.trim();
-  const anon=document.getElementById('anonymous').checked;
-  if(!body){ alert('Scrivi un messaggio'); return; }
-  await fetch(`${API_URL}/post`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({user_id:currentUser.id,body,anonymous:anon})
-  });
-  bodyInput.value='';
-  document.getElementById('anonymous').checked=false;
-  renderPosts();
-});
-
-// ELIMINA PROFILO
-deleteProfile.addEventListener('click', async ()=>{
-  if(confirm('Vuoi eliminare definitivamente il tuo profilo?')) {
-    await fetch(`${API_URL}/deleteProfile`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({user_id:currentUser.id})
-    });
-    localStorage.removeItem('student_user');
-    currentUser=null;
-    showPage(pageLogin);
-  }
-});
-
-// LOGOUT
-logoutBtn.addEventListener('click', ()=>{
-  localStorage.removeItem('student_user');
-  currentUser=null;
-  showPage(pageLogin);
-});
-
-// PROFILO
-profileForm.addEventListener('submit', async e=>{
+profileForm.addEventListener('submit', e=>{
   e.preventDefault();
-  const formData={username:p_username.value,classe:p_classe.value,sezione:p_sezione.value,indirizzo:p_indirizzo.value};
-  await fetch(`${API_URL}/updateProfile?id=${currentUser.id}`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(formData)
+  const formData=new FormData();
+  formData.append('username',p_username.value.trim());
+  formData.append('classe',p_classe.value);
+  formData.append('sezione',p_sezione.value);
+  formData.append('indirizzo',p_indirizzo.value);
+  fetch(`${API_URL}/updateProfile?id=${currentUser.id}`,{method:'POST',body:formData})
+  .then(res=>res.json()).then(data=>{
+    if(data.success){
+      profileMsg.textContent='Profilo aggiornato';
+      profileMsg.classList.add('success-msg');
+      currentUser=data.user;
+      localStorage.setItem('student_user',JSON.stringify(currentUser));
+      renderPosts();
+    }
   });
-  profileMsg.innerHTML='<span style="color:green">Profilo aggiornato</span>';
-  currentUser={...currentUser,...formData};
-  renderPosts();
 });
 
-// FOTO PROFILO
 p_pic.addEventListener('change', ()=>{
   const file=p_pic.files[0];
   if(!file) return;
   const reader=new FileReader();
-  reader.onload=async ()=>{
+  reader.onload=()=>{
     profilePicPreview.src=reader.result;
-    currentUser.profile_pic=reader.result;
-    await fetch(`${API_URL}/updateProfile?id=${currentUser.id}`,{
+    fetch(`${API_URL}/updateProfile?id=${currentUser.id}`,{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({profile_pic:reader.result})
+      body:JSON.stringify({profile_pic:reader.result}),
+      headers:{'Content-Type':'application/json'}
+    }).then(res=>res.json()).then(data=>{
+      currentUser=data.user;
+      localStorage.setItem('student_user',JSON.stringify(currentUser));
     });
   };
   reader.readAsDataURL(file);
 });
 
-// TORNA ALLA BACHECA
-backBoard.addEventListener('click', ()=>showPage(pageBoard));
-gotoProfile.addEventListener('click', ()=>{ loadProfileData(); showPage(pageProfile); });
-gotoSearch.addEventListener('click', ()=>showPage(pageSearch));
-backBoardFromSearch.addEventListener('click', ()=>showPage(pageBoard));
+backBoard.addEventListener('click', ()=>{ showPage(pageBoard); });
 
-// CERCA PROFILI
-searchBtn.addEventListener('click', async ()=>{
+// ELIMINA PROFILO
+deleteProfileBtn.addEventListener('click', ()=>{
+  if(!confirm('Sei sicuro di voler eliminare il tuo profilo?')) return;
+  fetch(`${API_URL}/deleteProfile?id=${currentUser.id}`,{method:'POST'})
+  .then(()=>{ localStorage.removeItem('student_user'); showPage(pageLogin); });
+});
+
+// LOGOUT
+logoutBtn.addEventListener('click',()=>{ localStorage.removeItem('student_user'); showPage(pageLogin); });
+gotoProfile.addEventListener('click',()=>{ showPage(pageProfile); });
+gotoSearch.addEventListener('click',()=>{ showPage(pageSearch); });
+
+// BACHECA
+postBtn.addEventListener('click',()=>{
+  const body=bodyInput.value.trim();
+  const anon=document.getElementById('anonymous').checked;
+  if(!body) return alert('Scrivi un messaggio');
+  fetch(`${API_URL}/post`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({user_id:currentUser.id,body,anonymous:anon})
+  }).then(()=>{ bodyInput.value=''; renderPosts(); });
+});
+
+// RICERCA PROFILI
+searchBtn.addEventListener('click', ()=>{
   const q=searchInput.value.trim().toLowerCase();
   searchResults.innerHTML='';
-  const res=await fetch(`${API_URL}/users`);
-  const users=await res.json();
-  users.filter(u=>u.username.toLowerCase().includes(q)).forEach(u=>{
-    const div=document.createElement('div');
-    div.className='card';
-    div.innerHTML=`<img src='${u.profile_pic||''}' data-id='${u.id}'/><strong data-id='${u.id}'>${u.username}</strong> - Classe ${u.classe}${u.sezione} - ${u.indirizzo}`;
-    div.querySelectorAll('strong,img').forEach(el=>{
-      el.addEventListener('click', ()=>showProfilePopup(u));
+  fetch(`${API_URL}/users`).then(res=>res.json()).then(users=>{
+    users.filter(u=>u.username.toLowerCase().includes(q)).forEach(u=>{
+      const div=document.createElement('div');
+      div.className='card search-user';
+      fetch(`${API_URL}/posts`).then(res=>res.json()).then(posts=>{
+        const userPosts=posts.filter(p=>p.user_id===u.id && !p.anonymous);
+        div.innerHTML=`<img src='${u.profile_pic||''}'/><strong class="user-link" data-id="${u.id}">${u.username}</strong> - Classe ${u.classe}${u.sezione} - ${u.indirizzo}<br><hr>${userPosts.map(p=>p.body).join('<br>')||'Nessun messaggio'}`;
+        searchResults.appendChild(div);
+        div.querySelector('.user-link').addEventListener('click', ()=>{ alert('Apri popup profilo'); });
+      });
     });
-    searchResults.appendChild(div);
   });
 });
 
-// POPUP PROFILO
-function showProfilePopup(user){
-  profilePopup.style.display='block';
-  profilePopup.innerHTML=`<img src='${user.profile_pic||''}' style='width:80px;height:80px;border-radius:50%;'/><strong>${user.username}</strong><br>Classe ${user.classe}${user.sezione}<br>${user.indirizzo}`;
-  profilePopup.style.top=event.pageY+'px';
-  profilePopup.style.left=event.pageX+'px';
-  setTimeout(()=>profilePopup.style.display='none',5000);
-}
+backBoardFromSearch.addEventListener('click',()=>{ showPage(pageBoard); });
 
-// RENDER POST
-async function renderPosts(){
-  const res=await fetch(`${API_URL}/posts`);
-  const posts=await res.json();
-  postsEl.innerHTML='';
-  posts.forEach(p=>{
-    const div=document.createElement('div');
-    div.className='post';
-    let userName=p.anonymous?'Anonimo':p.username;
-    let userPic=p.anonymous?'':'<img src="'+(p.profile_pic||'')+'" data-id="'+p.user_id+'"/>';
-    div.innerHTML=`${userPic}<div class='post-content'><strong data-id='${p.user_id}'>${userName}</strong><div>${parseTags(p.body)}</div><div class='meta'>${new Date(p.timestamp).toLocaleString()} <span class='link' data-id='${p.id}'>Elimina</span></div></div>`;
-    div.querySelectorAll('strong[data-id]').forEach(el=>{ el.addEventListener('click', ()=>showProfilePopup({id:el.dataset.id,username:el.textContent})) });
-    div.querySelector('.link')?.addEventListener('click', async ()=>{ await fetch(`${API_URL}/deletePost`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({post_id:p.id})}); renderPosts(); });
-    postsEl.appendChild(div);
+// CARICA POST
+function renderPosts(){
+  fetch(`${API_URL}/posts`).then(res=>res.json()).then(posts=>{
+    postsEl.innerHTML='';
+    posts.forEach(p=>{
+      const div=document.createElement('div');
+      div.className='post';
+      div.innerHTML=`${!p.anonymous?`<img src='${p.profile_pic||''}'/>`:''}<div class='post-content'><strong>${p.anonymous?'Anonimo':p.username}</strong><div>${p.body.replace(/@(\w+)/g, (m,u)=>`<span class="user-link" data-id="${u}">@${u}</span>`).replace(/\n/g,'<br>')}</div><div class='meta'>${new Date(p.timestamp).toLocaleString()} - <span class="link" data-id="${p.id}" onclick="deleteMessage(${p.id})">Elimina</span></div></div>`;
+      postsEl.appendChild(div);
+    });
+    document.querySelectorAll('.user-link').forEach(el=>{
+      el.addEventListener('click', ()=>{ alert(`Apri popup profilo: ${el.textContent}`); });
+    });
   });
 }
 
-// RICONOSCE TAG @username
-function parseTags(text){
-  return text.replace(/@([a-zA-Z0-9._]+)/g, '<a class="tag">@$1</a>');
+// ELIMINA MESSAGGIO
+function deleteMessage(id){
+  fetch(`${API_URL}/deletePost?id=${id}`,{method:'POST'}).then(()=>renderPosts());
 }
 
-// CARICAMENTO AUTOMATICO
-const savedUser=localStorage.getItem('student_user');
-if(savedUser){ currentUser=JSON.parse(savedUser); loadProfileData(); renderPosts(); showPage(pageBoard); }
+// AUTOLOGIN
+const storedUser=localStorage.getItem('student_user');
+if(storedUser){ currentUser=JSON.parse(storedUser); loadProfile(); renderPosts(); showPage(pageBoard); }
+
 </script>
 </body>
 </html>
