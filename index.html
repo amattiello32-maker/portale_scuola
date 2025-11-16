@@ -20,12 +20,9 @@ button{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;background:var
 .post-content{flex:1;}
 .meta{font-size:12px;color:#6b7280; margin-top:4px;}
 .actions{display:flex;gap:8px;align-items:center;margin-top:10px}
-.link{background:transparent;border:0;color:var(--muted);cursor:pointer;text-decoration:underline;font-size:14px}
-.popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.2);padding:20px;z-index:1000;display:none;max-width:320px;}
-.popup img{width:80px;height:80px;border-radius:50%;object-fit:cover; margin-bottom:10px;}
-.popup-close{float:right; cursor:pointer; font-weight:bold;}
-.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:900;display:none;}
-a.username{color:var(--accent); cursor:pointer;}
+.link{background:transparent;border:0;color:var(--muted);cursor:pointer;text-decoration:underline;}
+.username.tag{color:var(--accent);cursor:pointer;text-decoration:none;}
+#profileMsg{color:green;}
 </style>
 </head>
 <body>
@@ -38,18 +35,13 @@ a.username{color:var(--accent); cursor:pointer;}
     <label for="email">Email</label>
     <input id="email" type="email" placeholder="nome.cognome@isisleonardodavincipoggiomarino.it" required />
     <label for="password">Password</label>
-    <input id="password" type="password" placeholder="La password condivisa" required />
+    <input id="password" type="password" placeholder="Password" required />
     <button type="submit">Accedi</button>
-    <div id="loginMsg" class="muted"></div>
+    <div id="loginMsg" aria-live="polite" style="margin-top:10px"></div>
   </form>
-</section>
-
-<!-- CAMBIO PASSWORD -->
-<section id="page-password" class="card hidden">
-  <h2>Cambia Password</h2>
-  <p class="muted">È il tuo primo accesso, devi impostare una nuova password.</p>
-  <input id="newPassword" type="password" placeholder="Nuova password" />
-  <button id="changePasswordBtn">Salva Password</button>
+  <div id="resetDiv" class="hidden">
+    <button id="resetPasswordBtn">Reset password generale (SG20513)</button>
+  </div>
 </section>
 
 <!-- BACHECA -->
@@ -57,6 +49,8 @@ a.username{color:var(--accent); cursor:pointer;}
   <section id="posts" class="card"></section>
   <div class="card">
     <h2>Bacheca della scuola</h2>
+    <p class="muted">Scrivi liberamente: puoi postare con il tuo account o in anonimo. Usa <strong>@username</strong> per taggare.</p>
+    <label for="body">Contenuto</label>
     <textarea id="body" rows="5" placeholder="Scrivi qui..."></textarea>
     <label><input type="checkbox" id="anonymous"> Pubblica in anonimo</label>
     <div class="actions">
@@ -85,11 +79,9 @@ a.username{color:var(--accent); cursor:pointer;}
     <select id="p_sezione"><option value="">-- seleziona --</option><option>A</option><option>B</option><option>C</option><option>D</option></select>
     <label for="p_indirizzo">Indirizzo</label>
     <select id="p_indirizzo"><option value="">-- seleziona --</option><option>OSA</option><option>AFM</option><option>SIA</option><option>Q</option><option>CAT</option><option>ITI</option><option>LC</option><option>LL</option><option>LS</option></select>
-    <div class="actions">
-      <button type="submit">Salva Profilo</button>
-      <button type="button" id="deleteProfileBtn" class="link">Elimina Profilo</button>
-      <button type="button" id="backBoard" class="link">Torna alla Bacheca</button>
-    </div>
+    <button type="submit">Salva Profilo</button>
+    <button type="button" id="deleteProfile" class="link">Elimina Profilo</button>
+    <button type="button" id="backBoard" class="link">Torna alla Bacheca</button>
     <div id="profileMsg" class="muted" style="margin-top:10px"></div>
   </form>
 </section>
@@ -105,41 +97,30 @@ a.username{color:var(--accent); cursor:pointer;}
 </section>
 
 <!-- POPUP PROFILO -->
-<div class="overlay" id="overlay"></div>
-<div class="popup" id="profilePopup">
-  <span class="popup-close" id="popupClose">×</span>
-  <img id="popupPic" src="" />
-  <h3 id="popupUsername"></h3>
-  <p id="popupClasse"></p>
-  <p id="popupIndirizzo"></p>
-  <div id="popupPosts"></div>
+<div id="profilePopup" class="card hidden" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:999;width:300px">
+  <div style="text-align:center">
+    <img id="popupPic" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #e2e8f0;">
+    <h3 id="popupName"></h3>
+    <p id="popupClasse"></p>
+    <p id="popupIndirizzo"></p>
+    <button id="closePopup" class="link">Chiudi</button>
+  </div>
 </div>
 
 <script>
 const API_URL='';
 
-// PAGINE
+// DOM
 const pageLogin=document.getElementById('page-login');
-const pagePassword=document.getElementById('page-password');
 const pageBoard=document.getElementById('page-board');
 const pageProfile=document.getElementById('page-profile');
 const pageSearch=document.getElementById('page-search');
-
-function showPage(page){
-  pageLogin.classList.add('hidden'); pagePassword.classList.add('hidden'); 
-  pageBoard.classList.add('hidden'); pageProfile.classList.add('hidden'); pageSearch.classList.add('hidden'); 
-  page.classList.remove('hidden');
-}
-
-// ELEMENTI
 const loginForm=document.getElementById('loginForm');
 const emailInput=document.getElementById('email');
 const passwordInput=document.getElementById('password');
 const loginMsg=document.getElementById('loginMsg');
-
-const newPasswordInput=document.getElementById('newPassword');
-const changePasswordBtn=document.getElementById('changePasswordBtn');
-
+const resetDiv=document.getElementById('resetDiv');
+const resetPasswordBtn=document.getElementById('resetPasswordBtn');
 const postBtn=document.getElementById('postBtn');
 const bodyInput=document.getElementById('body');
 const postsEl=document.getElementById('posts');
@@ -156,113 +137,132 @@ const p_indirizzo=document.getElementById('p_indirizzo');
 const profileForm=document.getElementById('profileForm');
 const profileMsg=document.getElementById('profileMsg');
 const backBoard=document.getElementById('backBoard');
-const deleteProfileBtn=document.getElementById('deleteProfileBtn');
+const deleteProfile=document.getElementById('deleteProfile');
 
 const searchInput=document.getElementById('searchInput');
 const searchBtn=document.getElementById('searchBtn');
 const searchResults=document.getElementById('searchResults');
 const backBoardFromSearch=document.getElementById('backBoardFromSearch');
 
-const overlay=document.getElementById('overlay');
 const profilePopup=document.getElementById('profilePopup');
-const popupClose=document.getElementById('popupClose');
 const popupPic=document.getElementById('popupPic');
-const popupUsername=document.getElementById('popupUsername');
+const popupName=document.getElementById('popupName');
 const popupClasse=document.getElementById('popupClasse');
 const popupIndirizzo=document.getElementById('popupIndirizzo');
-const popupPosts=document.getElementById('popupPosts');
+const closePopup=document.getElementById('closePopup');
 
-// UTILI
-function getCurrentUser(){ return JSON.parse(localStorage.getItem('student_user')); }
-function saveCurrentUser(u){ localStorage.setItem('student_user', JSON.stringify(u)); }
+let currentUser=null;
+
+function showPage(page){ pageLogin.classList.add('hidden'); pageBoard.classList.add('hidden'); pageProfile.classList.add('hidden'); pageSearch.classList.add('hidden'); page.classList.remove('hidden'); }
 
 // LOGIN
 loginForm.addEventListener('submit', e=>{
   e.preventDefault();
   const email=emailInput.value.trim();
   const password=passwordInput.value.trim();
-  if(!email.endsWith('@isisleonardodavincipoggiomarino.it')){
-    loginMsg.textContent='Usa un account istituzionale valido';
-    return;
-  }
   fetch(`${API_URL}/login`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({email,password})
   }).then(res=>res.json()).then(data=>{
     if(data.success){
-      saveCurrentUser(data.user);
+      currentUser=data.user;
+      localStorage.setItem('student_user',JSON.stringify(currentUser));
+      p_username.value=currentUser.username;
+      p_classe.value=currentUser.classe||'';
+      p_sezione.value=currentUser.sezione||'';
+      p_indirizzo.value=currentUser.indirizzo||'';
+      profilePicPreview.src=currentUser.profile_pic||'';
+      showPage(pageBoard);
+      renderPosts();
       if(data.first_login){
-        showPage(pagePassword);
-      }else{
-        renderPosts();
-        showPage(pageBoard);
+        const newPassword=prompt("Primo accesso! Inserisci nuova password:");
+        if(newPassword){
+          fetch(`${API_URL}/updatePassword`,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({user_id:currentUser.id,new_password:newPassword})
+          }).then(()=>alert("Password aggiornata."));
+        }
       }
-    }else loginMsg.textContent=data.message;
+    }else{
+      loginMsg.textContent=data.message;
+      if(data.failed_attempts>=3){
+        resetDiv.classList.remove('hidden');
+      }
+    }
   });
 });
 
-// CAMBIO PASSWORD
-changePasswordBtn.addEventListener('click',()=>{
-  const user=getCurrentUser();
-  const new_pw=newPasswordInput.value.trim();
-  if(!new_pw){ alert('Inserisci una nuova password'); return; }
-  fetch(`${API_URL}/updatePassword`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({user_id:user.id,new_password:new_pw})
-  }).then(()=>{ user.password=new_pw; user.first_login=0; saveCurrentUser(user); renderPosts(); showPage(pageBoard); });
+// RESET PASSWORD
+resetPasswordBtn.addEventListener('click',()=>{
+  if(confirm("Vuoi resettare la password generale SG20513?")){
+    fetch(`${API_URL}/resetPassword`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:emailInput.value.trim()})
+    }).then(()=>alert("Password resettata, usa SG20513 per accedere."));
+  }
 });
 
 // BACHECA
 postBtn.addEventListener('click',()=>{
-  const user=getCurrentUser();
   const body=bodyInput.value.trim();
   const anon=document.getElementById('anonymous').checked;
   if(!body) return alert('Scrivi un messaggio');
   fetch(`${API_URL}/post`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({user_id:user.id,body,anonymous:anon})
+    body:JSON.stringify({user_id:currentUser.id,body,anonymous:anon})
   }).then(()=>{ bodyInput.value=''; renderPosts(); });
 });
 
-logoutBtn.addEventListener('click',()=>{ localStorage.removeItem('student_user'); showPage(pageLogin); });
+logoutBtn.addEventListener('click',()=>{ localStorage.removeItem('student_user'); currentUser=null; showPage(pageLogin); });
 gotoProfile.addEventListener('click',()=>{ showPage(pageProfile); });
 gotoSearch.addEventListener('click',()=>{ showPage(pageSearch); });
 
 // PROFILO
 profileForm.addEventListener('submit',e=>{
   e.preventDefault();
-  const user=getCurrentUser();
-  const formData=new FormData();
-  formData.append('username',p_username.value.trim());
-  formData.append('classe',p_classe.value);
-  formData.append('sezione',p_sezione.value);
-  formData.append('indirizzo',p_indirizzo.value);
-  formData.append('profile_pic',profilePicPreview.src);
-  fetch(`${API_URL}/updateProfile?id=${user.id}`,{
-    method:'POST',body:formData
-  }).then(()=>{ profileMsg.textContent='Profilo aggiornato'; renderPosts(); });
+  const formData={username:p_username.value,classe:p_classe.value,sezione:p_sezione.value,indirizzo:p_indirizzo.value};
+  fetch(`${API_URL}/updateProfile?id=${currentUser.id}`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(formData)
+  }).then(res=>res.json()).then(data=>{
+    if(data.success){
+      profileMsg.textContent='Profilo aggiornato';
+      profilePicPreview.src=data.user.profile_pic||'';
+      currentUser=data.user;
+      localStorage.setItem('student_user',JSON.stringify(currentUser));
+      renderPosts();
+    }
+  });
 });
 
-// CANCELLA PROFILO
-deleteProfileBtn.addEventListener('click',()=>{
-  const user=getCurrentUser();
-  if(confirm('Vuoi eliminare il tuo profilo? Tutti i messaggi saranno eliminati.')){
-    fetch(`${API_URL}/deleteProfile`,{
-      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id})
-    }).then(()=>{ localStorage.removeItem('student_user'); showPage(pageLogin); });
-  }
-});
-
-// FOTO PROFILO
 p_pic.addEventListener('change',()=>{
   const file=p_pic.files[0];
-  if(!file) return;
   const reader=new FileReader();
-  reader.onload=()=>{ profilePicPreview.src=reader.result; };
+  reader.onload=()=>{ profilePicPreview.src=reader.result;
+    fetch(`${API_URL}/updateProfile?id=${currentUser.id}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({profile_pic:reader.result})
+    });
+  }
   reader.readAsDataURL(file);
+});
+
+backBoard.addEventListener('click',()=>{ showPage(pageBoard); });
+
+deleteProfile.addEventListener('click',()=>{
+  if(confirm("Vuoi eliminare definitivamente il tuo profilo?")){
+    fetch(`${API_URL}/deleteProfile`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({user_id:currentUser.id})
+    }).then(()=>{ localStorage.removeItem('student_user'); currentUser=null; showPage(pageLogin); });
+  }
 });
 
 // RICERCA PROFILI
@@ -271,69 +271,66 @@ searchBtn.addEventListener('click',()=>{
   searchResults.innerHTML='';
   fetch(`${API_URL}/users`).then(res=>res.json()).then(users=>{
     users.filter(u=>u.username.toLowerCase().includes(q)).forEach(u=>{
-      const div=document.createElement('div'); div.className='card';
-      div.innerHTML=`<img src='${u.profile_pic||''}' style='width:40px;height:40px;border-radius:50%;margin-right:10px;vertical-align:middle;cursor:pointer;' class="popup-trigger" data-id="${u.id}"/> <strong class="popup-trigger" data-id="${u.id}">${u.username}</strong> - Classe ${u.classe}${u.sezione} - ${u.indirizzo}`;
-      searchResults.appendChild(div);
+      const div=document.createElement('div');
+      div.className='card';
+      fetch(`${API_URL}/posts`).then(res=>res.json()).then(posts=>{
+        const userPosts=posts.filter(p=>p.user_id===u.id && p.anonymous===0);
+        div.innerHTML=`<img src='${u.profile_pic||''}' style='width:40px;height:40px;border-radius:50%;margin-right:10px;vertical-align:middle;cursor:pointer;' class="popupTrigger" data-id="${u.id}"/> <strong class="popupTrigger" data-id="${u.id}" style="cursor:pointer;">${u.username}</strong> - Classe ${u.classe}${u.sezione} - ${u.indirizzo}<br><hr>${userPosts.map(p=>p.body).join('<br>')||'Nessun messaggio'}`;
+        searchResults.appendChild(div);
+      });
     });
-    attachPopupTriggers();
   });
 });
 
 backBoardFromSearch.addEventListener('click',()=>{ showPage(pageBoard); });
 
 // POPUP PROFILO
-function attachPopupTriggers(){
-  document.querySelectorAll('.popup-trigger').forEach(el=>{
-    el.onclick=()=>{
-      const uid=el.dataset.id;
-      fetch(`${API_URL}/users`).then(res=>res.json()).then(users=>{
-        const u=users.find(x=>x.id==uid);
-        if(u){
-          popupPic.src=u.profile_pic||'';
-          popupUsername.textContent=u.username;
-          popupClasse.textContent=`Classe ${u.classe}${u.sezione}`;
-          popupIndirizzo.textContent=u.indirizzo;
-          fetch(`${API_URL}/posts`).then(res=>res.json()).then(posts=>{
-            const userPosts=posts.filter(p=>p.user_id==u.id && !p.anonymous);
-            popupPosts.innerHTML=userPosts.map(p=>`<p>${p.body}</p>`).join('');
-            overlay.style.display='block';
-            profilePopup.style.display='block';
-          });
-        }
-      });
-    }
-  });
-}
-popupClose.onclick=()=>{ overlay.style.display='none'; profilePopup.style.display='none'; }
+document.addEventListener('click', e=>{
+  if(e.target.classList.contains('popupTrigger')){
+    const id=e.target.dataset.id;
+    fetch(`${API_URL}/users`).then(res=>res.json()).then(users=>{
+      const u=users.find(u=>u.id==id);
+      if(u){
+        popupPic.src=u.profile_pic||'';
+        popupName.textContent=u.username;
+        popupClasse.textContent=`Classe: ${u.classe}${u.sezione}`;
+        popupIndirizzo.textContent=`Indirizzo: ${u.indirizzo}`;
+        profilePopup.classList.remove('hidden');
+      }
+    });
+  }
+});
+closePopup.addEventListener('click',()=>{ profilePopup.classList.add('hidden'); });
 
-// RENDER POST
+// RENDER POSTS
 function renderPosts(){
   fetch(`${API_URL}/posts`).then(res=>res.json()).then(posts=>{
     postsEl.innerHTML='';
-    const user=getCurrentUser();
     posts.forEach(p=>{
-      const div=document.createElement('div'); div.className='post';
-      let profileImg=p.anonymous?'':'<img src="'+p.profile_pic+'"/>';
-      let username=p.anonymous?'Anonimo':`<a class="username popup-trigger" data-id="${p.user_id}">${p.username}</a>`;
-      div.innerHTML=`${profileImg}<div class='post-content'>${username}<div>${p.body.replace(/@(\w+)/g, `<a href="#" class="username tag" data-username="$1">@$1</a>`)}</div><div class='meta'>${new Date(p.timestamp).toLocaleString()} <span class="link delete-post" data-id="${p.id}">Elimina</span></div></div>`;
-      postsEl.appendChild(div);
-    });
-    attachPopupTriggers();
-    document.querySelectorAll('.delete-post').forEach(el=>{
-      el.onclick=()=>{
-        if(confirm('Eliminare questo messaggio?')){
-          fetch(`${API_URL}/deletePost`,{
-            method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({post_id:el.dataset.id})
-          }).then(()=> renderPosts());
-        }
-      }
+      const username = p.anonymous ? 'Anonimo' : p.username;
+      const profileImg = p.anonymous ? '' : p.profile_pic||'';
+      const postDiv=document.createElement('div');
+      postDiv.className='post';
+      let bodyHTML = p.body.replace(/@([a-zA-Z0-9_.]+)/g, `<a href="#" class="username tag" data-username="$1">@$1</a>`);
+      postDiv.innerHTML=`${profileImg?`<img src="${profileImg}"/>`:''}<div class='post-content'><strong>${username}</strong><div>${bodyHTML}</div><div class='meta'>${new Date(p.timestamp).toLocaleString()}</div><div><span class="link" style="color:gray;text-decoration:underline;" onclick="deletePost(${p.id})">Elimina</span></div></div>`;
+      postsEl.appendChild(postDiv);
     });
   });
 }
 
-// CARICAMENTO AUTOMATICO
-const currentUser=localStorage.getItem('student_user');
-if(currentUser){ renderPosts(); showPage(pageBoard); }
+function deletePost(id){
+  if(confirm("Eliminare questo messaggio?")){
+    fetch(`${API_URL}/deletePost`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({post_id:id})
+    }).then(()=>renderPosts());
+  }
+}
+
+// AUTO LOGIN
+const storedUser=localStorage.getItem('student_user');
+if(storedUser){ currentUser=JSON.parse(storedUser); showPage(pageBoard); renderPosts(); }
 </script>
 </body>
 </html>
