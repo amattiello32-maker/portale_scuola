@@ -1,137 +1,110 @@
-
-
-const express = require("express");
-const sqlite3 = require("sqlite3").verbose();
-const bodyParser = require("body-parser");
-const cors = require("cors");
-const path = require("path");
-
+const express = require('express');
+const sqlite3 = require('sqlite3').verbose();
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const path = require('path');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json({ limit: "10mb" }));
-app.use(express.static(path.join(__dirname))); // Serve index.html
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// --- DATABASE ---
-const db = new sqlite3.Database("school.db", (err) => {
-  if (err) console.error("Errore DB:", err);
-  else console.log("Database SQLite caricato.");
+// Serve file statici (index.html incluso)
+app.use(express.static(__dirname)); 
+
+const db = new sqlite3.Database('school.db');
+
+// Creazione tabelle
+db.serialize(() => {
+  db.run(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE,
+    username TEXT,
+    classe TEXT,
+    sezione TEXT,
+    indirizzo TEXT,
+    password TEXT,
+    profile_pic TEXT
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS posts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    body TEXT,
+    anonymous INTEGER,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  )`);
 });
 
-// Tabelle
-const initSQL = `
-CREATE TABLE IF NOT EXISTS users(
-  email TEXT PRIMARY KEY,
-  username TEXT,
-  classe TEXT,
-  sezione TEXT,
-  indirizzo TEXT,
-  foto TEXT
-);
-
-CREATE TABLE IF NOT EXISTS posts(
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  authorEmail TEXT,
-  body TEXT,
-  anonymous INTEGER,
-  timestamp INTEGER
-);
-`;
-
-db.exec(initSQL, (err) => {
-  if (err) console.log("Errore creazione tabelle:", err);
-  else console.log("Tabelle inizializzate.");
+// ROUTE HOME — serve index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html.html"));
 });
 
-// --- API ---
-
-// Login (solo controllo formato, password uguale per tutti)
-app.post("/api/login", (req, res) => {
+// LOGIN
+app.post('/login', (req,res)=>{
   const { email, password } = req.body;
-  if (!email.endsWith("@isisleonardodavincipoggiomarino.it")) {
-    return res.json({ ok: false, msg: "Email non valida" });
-  }
-  if (password !== "SG20513") {
-    return res.json({ ok: false, msg: "Password errata" });
-  }
-  return res.json({ ok: true });
-});
-
-// Salvataggio profilo
-app.post("/api/profile", (req, res) => {
-  const { email, username, classe, sezione, indirizzo, foto } = req.body;
-
-  const sql = `INSERT INTO users (email, username, classe, sezione, indirizzo, foto)
-               VALUES (?,?,?,?,?,?)
-               ON CONFLICT(email) DO UPDATE SET
-                 username=excluded.username,
-                 classe=excluded.classe,
-                 sezione=excluded.sezione,
-                 indirizzo=excluded.indirizzo,
-                 foto=excluded.foto;
-              `;
-
-  db.run(sql, [email, username, classe, sezione, indirizzo, foto], (err) => {
-    if (err) return res.json({ ok: false, msg: "Errore DB" });
-    res.json({ ok: true });
+  db.get(`SELECT * FROM users WHERE email=?`, [email], (err,row)=>{
+    if(err) return res.status(500).json({error: err.message});
+    if(row){
+      if(password===row.password) return res.json({success:true,user:row});
+      else return res.json({success:false,message:'Password errata'});
+    } else {
+      // crea nuovo utente se non esiste
+      db.run(`INSERT INTO users (email,password,username) VALUES (?,?,?)`, [email,password,email.split('@')[0]], function(err){
+        if(err) return res.status(500).json({error:err.message});
+        db.get(`SELECT * FROM users WHERE id=?`, [this.lastID], (err2,row2)=>res.json({success:true,user:row2}));
+      });
+    }
   });
 });
 
-// Recupera profilo
-app.get("/api/profile/:email", (req, res) => {
-  db.get("SELECT * FROM users WHERE email=?", [req.params.email], (err, row) => {
-    if (err) return res.json({ ok: false });
-    res.json({ ok: true, profile: row });
+// UPDATE PROFILO
+app.post('/updateProfile', (req,res)=>{
+  const id = req.query.id;
+  const { username, classe, sezione, indirizzo, profile_pic } = req.body;
+  const updates = [];
+  const params = [];
+  if(username){ updates.push("username=?"); params.push(username); }
+  if(classe){ updates.push("classe=?"); params.push(classe); }
+  if(sezione){ updates.push("sezione=?"); params.push(sezione); }
+  if(indirizzo){ updates.push("indirizzo=?"); params.push(indirizzo); }
+  if(profile_pic){ updates.push("profile_pic=?"); params.push(profile_pic); }
+  if(updates.length===0) return res.json({success:false,message:'Nessun dato da aggiornare'});
+  params.push(id);
+  db.run(`UPDATE users SET ${updates.join(',')} WHERE id=?`, params, function(err){
+    if(err) return res.status(500).json({error:err.message});
+    db.get(`SELECT * FROM users WHERE id=?`, [id], (err,row)=>res.json({success:true,user:row}));
   });
 });
 
-// Pubblicare un post
-app.post("/api/post", (req, res) => {
-  const { email, body, anonymous } = req.body;
-  const sql = `INSERT INTO posts (authorEmail, body, anonymous, timestamp)
-               VALUES (?,?,?,?)`;
-  db.run(sql, [email, body, anonymous ? 1 : 0, Date.now()], (err) => {
-    if (err) return res.json({ ok: false });
-    res.json({ ok: true });
+// INSERIMENTO POST
+app.post('/post', (req,res)=>{
+  const { user_id, body, anonymous } = req.body;
+  db.run(`INSERT INTO posts (user_id, body, anonymous) VALUES (?,?,?)`, [user_id, body, anonymous?1:0], function(err){
+    if(err) return res.status(500).json({error:err.message});
+    res.json({success:true,post_id:this.lastID});
   });
 });
 
-// Lista post
-app.get("/api/posts", (req, res) => {
-  const sql = `SELECT posts.*, users.username, users.foto
-               FROM posts LEFT JOIN users ON posts.authorEmail = users.email
-               ORDER BY timestamp DESC`;
-
-  db.all(sql, [], (err, rows) => {
-    if (err) return res.json({ ok: false });
-    res.json({ ok: true, posts: rows });
+// OTTIENI POST
+app.get('/posts', (req,res)=>{
+  db.all(`SELECT posts.*, users.username, users.profile_pic FROM posts JOIN users ON posts.user_id = users.id ORDER BY timestamp DESC`, [], (err, rows)=>{
+    if(err) return res.status(500).json({error:err.message});
+    res.json(rows);
   });
 });
 
-// Ricerca profili
-app.get("/api/search", (req, res) => {
-  const q = `%${req.query.q || ""}%`;
-  const sql = `SELECT * FROM users WHERE email LIKE ? OR username LIKE ?`;
-
-  db.all(sql, [q, q], (err, rows) => {
-    if (err) return res.json({ ok: false });
-    res.json({ ok: true, results: rows });
-  });
-});
-
-// Recupera tutti i post di un utente
-app.get("/api/user-posts/:email", (req, res) => {
-  const sql = `SELECT * FROM posts WHERE authorEmail=? ORDER BY timestamp DESC`;
-  db.all(sql, [req.params.email], (err, rows) => {
-    if (err) return res.json({ ok: false });
-    res.json({ ok: true, posts: rows });
+// LISTA UTENTI
+app.get('/users', (req,res)=>{
+  db.all(`SELECT id,username,classe,sezione,indirizzo,profile_pic FROM users`, [], (err, rows)=>{
+    if(err) return res.status(500).json({error:err.message});
+    res.json(rows);
   });
 });
 
 // Avvio server
-app.listen(PORT, () => {
-  console.log(`Server avviato su porta ${PORT}`);
-});
-
+app.listen(port, ()=> console.log(`Server in ascolto sulla porta ${port}`));
