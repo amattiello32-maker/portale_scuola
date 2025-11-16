@@ -6,13 +6,13 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
-app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.json({limit:'10mb'}));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Serve file statici (index.html incluso)
-app.use(express.static(__dirname)); 
+//(index.html, immagini, css, js)
+app.use(express.static(__dirname));
+
 
 const db = new sqlite3.Database('school.db');
 
@@ -108,3 +108,4 @@ app.get('/users', (req,res)=>{
 
 // Avvio server
 app.listen(port, ()=> console.log(`Server in ascolto sulla porta ${port}`));
+
