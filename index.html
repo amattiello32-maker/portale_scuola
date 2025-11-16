@@ -21,6 +21,7 @@ button{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;background:var
 .meta{font-size:12px;color:#6b7280; margin-top:4px;}
 .actions{display:flex;gap:8px;align-items:center;margin-top:10px}
 .link{background:transparent;border:0;color:var(--accent);cursor:pointer}
+.delete-btn{background:#ef4444;}
 </style>
 </head>
 <body>
@@ -157,7 +158,10 @@ postBtn.addEventListener('click',()=>{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({user_id:user.id,body,anonymous:anon})
-  }).then(()=>{ bodyInput.value=''; renderPosts(); });
+  }).then(res=>res.json()).then(data=>{
+    bodyInput.value='';
+    renderPosts();
+  });
 });
 
 logoutBtn.addEventListener('click',()=>{ localStorage.removeItem('student_user'); showPage(pageLogin); });
@@ -168,14 +172,16 @@ gotoSearch.addEventListener('click',()=>{ showPage(pageSearch); });
 profileForm.addEventListener('submit',e=>{
   e.preventDefault();
   const user=JSON.parse(localStorage.getItem('student_user'));
-  const formData=new FormData();
-  formData.append('username',p_username.value.trim());
-  formData.append('classe',p_classe.value);
-  formData.append('sezione',p_sezione.value);
-  formData.append('indirizzo',p_indirizzo.value);
+  const payload={
+    username:p_username.value.trim(),
+    classe:p_classe.value,
+    sezione:p_sezione.value,
+    indirizzo:p_indirizzo.value
+  };
   fetch(`${API_URL}/updateProfile?id=${user.id}`,{
     method:'POST',
-    body:formData
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
   }).then(()=>{ profileMsg.textContent='Profilo aggiornato'; renderPosts(); });
 });
 
@@ -183,7 +189,14 @@ p_pic.addEventListener('change',()=>{
   const user=JSON.parse(localStorage.getItem('student_user'));
   const file=p_pic.files[0];
   const reader=new FileReader();
-  reader.onload=()=>{ profilePicPreview.src=reader.result; fetch(`${API_URL}/updateProfile?id=${user.id}`,{method:'POST',body:JSON.stringify({profile_pic:reader.result}), headers:{'Content-Type':'application/json'}}); }
+  reader.onload=()=>{
+    profilePicPreview.src=reader.result;
+    fetch(`${API_URL}/updateProfile?id=${user.id}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({profile_pic:reader.result})
+    });
+  };
   reader.readAsDataURL(file);
 });
 
@@ -210,15 +223,23 @@ backBoardFromSearch.addEventListener('click',()=>{ showPage(pageBoard); });
 
 // Carica post dal server
 function renderPosts(){
+  const user=JSON.parse(localStorage.getItem('student_user'));
   fetch(`${API_URL}/posts`).then(res=>res.json()).then(posts=>{
     postsEl.innerHTML='';
     posts.forEach(p=>{
       const div=document.createElement('div');
       div.className='post';
-      div.innerHTML=`<img src='${p.profile_pic||''}'/><div class='post-content'><strong>${p.anonymous?'Anonimo':p.username}</strong><div>${p.body}</div><div class='meta'>${new Date(p.timestamp).toLocaleString()}</div></div>`;
+      const showPic=!p.anonymous?`<img src='${p.profile_pic||''}'/>`:'';
+      const deleteBtn=(user.id===p.user_id)?`<button class="delete-btn" onclick="deletePost(${p.id})">Elimina</button>`:'';
+      div.innerHTML=`${showPic}<div class='post-content'><strong>${p.anonymous?'Anonimo':p.username}</strong><div>${p.body}</div><div class='meta'>${new Date(p.timestamp).toLocaleString()}</div>${deleteBtn}</div>`;
       postsEl.appendChild(div);
     });
   });
+}
+
+// Elimina post
+function deletePost(id){
+  fetch(`${API_URL}/post/${id}`,{method:'DELETE'}).then(()=>renderPosts());
 }
 
 // Caricamento automatico se già loggato
@@ -228,4 +249,3 @@ if(currentUser){ renderPosts(); showPage(pageBoard); }
 </script>
 </body>
 </html>
-
