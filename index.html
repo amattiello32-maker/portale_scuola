@@ -3,90 +3,151 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Portale Studenti — Accesso, Bacheca, Profilo e Ricerca</title>
+<title>Portale Studenti — Bacheca & Profili</title>
 <style>
-:root{--bg:#f6f8ff;--card:#ffffff;--accent:#2563eb;--muted:#475569;--success:#065f46}
+:root{
+  --bg:#f6f8ff;
+  --card:#ffffff;
+  --accent:#2563eb;
+  --muted:#64748b;
+  --success:#16a34a;
+  --bubble:#ecf2ff;
+}
 *{box-sizing:border-box}
-body{font-size:18px;font-family:Inter,system-ui,Arial;margin:0;background:linear-gradient(180deg,var(--bg),#eef2ff);min-height:100vh;padding:18px}
-.card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 8px 30px rgba(15,23,42,0.06);margin-bottom:20px}
-label{display:block;font-size:13px;color:var(--muted);margin-top:10px}
-input[type="text"],input[type="email"],input[type="password"],textarea,select{width:100%;padding:10px;border:1px solid #e6edf9;border-radius:8px;font-size:14px}
-textarea{resize:vertical}
-button{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;background:var(--accent);color:#fff;margin-top:10px}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:Inter,system-ui,Arial;
+  background:linear-gradient(180deg,var(--bg),#eef2ff);
+  color:#0f172a;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  padding-bottom:90px; /* spazio per bottom nav + input bar */
+}
+
+/* Card */
+.card{
+  background:var(--card);
+  padding:16px;
+  border-radius:12px;
+  box-shadow:0 8px 30px rgba(15,23,42,0.06);
+  margin:14px;
+}
+
+/* Layout */
+.header{margin:10px 16px}
 .muted{color:var(--muted);font-size:13px}
-.hidden{display:none}
-.post{border-bottom:1px solid #eef2ff;padding:14px; display:flex; align-items:flex-start; gap:12px;}
-.post img{width:56px;height:56px;border-radius:50%;object-fit:cover;}
-.post-content{flex:1;}
-.meta{font-size:12px;color:#6b7280; margin-top:6px;}
-.actions{display:flex;gap:8px;align-items:center;margin-top:10px}
-.link{background:transparent;border:0;color:#6b7280;text-decoration:underline;cursor:pointer}
-.search-user img{width:70px;height:70px;border-radius:50%;object-fit:cover;margin-right:12px;vertical-align:middle;}
-.popup-profile{position:fixed;background:#fff;padding:18px;border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,0.25);z-index:999;display:none;min-width:360px;max-width:90%;left:50%;top:50%;transform:translate(-50%,-50%);}
-.popup-profile img{width:110px;height:110px;border-radius:50%;object-fit:cover;display:block;margin:auto}
-.popup-close{position:absolute;right:12px;top:8px;cursor:pointer;font-size:18px}
-.success-msg{color:var(--success);font-size:14px;margin-top:6px}
+
+/* Posts (bubble style) */
+#posts{padding:0 14px;margin-bottom:80px}
+.post{
+  display:flex; gap:10px; align-items:flex-start; margin-bottom:12px;
+}
+.post .avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:0 0 44px;cursor:pointer}
+.bubble{
+  background:var(--bubble);
+  padding:10px 12px;
+  border-radius:12px;
+  max-width:78%;
+  box-shadow:0 4px 12px rgba(2,6,23,0.04);
+  position:relative;
+}
+.bubble .author{font-weight:600;margin-bottom:6px}
+.bubble .time{font-size:12px;color:var(--muted);margin-top:6px}
+.bubble .actions{margin-top:6px}
+.link{background:transparent;border:0;color:#6b7280;cursor:pointer;text-decoration:underline;padding:0;font-size:13px}
+
+/* Bottom fixed WhatsApp-like input bar */
+.input-bar{
+  position:fixed;
+  left:0; right:0; bottom:56px;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  padding:10px;
+  background:rgba(255,255,255,0.95);
+  border-top:1px solid #e6edf9;
+  box-shadow:0 -4px 20px rgba(2,6,23,0.03);
+}
+.input-bar textarea{
+  flex:1; padding:10px;border-radius:20px;border:1px solid #e6edf9;resize:none;height:44px;font-size:15px;
+}
+.input-bar button{width:52px;height:44px;border-radius:20px;border:0;background:var(--accent);color:#fff;cursor:pointer}
+
+/* Bottom navigation (Instagram style) */
+.bottom-nav{
+  position:fixed; left:0; right:0; bottom:0;height:56px;background:#fff;border-top:1px solid #e6edf9;display:flex;align-items:center;justify-content:space-around;box-shadow:0 -4px 20px rgba(2,6,23,0.03)
+}
+.nav-item{display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--muted);cursor:pointer}
+.nav-item svg{width:22px;height:22px;margin-bottom:2px;}
+
+/* Profile popup */
+.popup{
+  position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); width:360px; max-width:92%;
+  background:#fff;padding:18px;border-radius:14px;box-shadow:0 12px 40px rgba(2,6,23,0.2); z-index:2000; display:none;
+}
+.popup .big-avatar{width:120px;height:120px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 12px;cursor:pointer}
+.popup h3{text-align:center;margin:4px 0}
+.popup p{text-align:center;color:var(--muted);margin:4px 0}
+.popup .posts{max-height:200px;overflow:auto;margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9}
+
+/* fullscreen image modal */
+.img-modal{position:fixed;inset:0;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;z-index:3000}
+.img-modal img{max-width:95%;max-height:95%;border-radius:8px}
+
+/* Search results styling */
+.search-user{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px}
+.search-user img{width:56px;height:56px;border-radius:50%;object-fit:cover}
+
+/* Responsive larger UI as requested */
+@media(min-width:900px){
+  body{padding-bottom:100px}
+  .popup{width:420px}
+}
 </style>
 </head>
 <body>
 
+<div class="header card">
+  <h1 style="margin:0 0 6px 0">Portale Studenti</h1>
+  <div class="muted">Account istituzionali — condividi idee e messaggi con la tua scuola</div>
+</div>
+
 <!-- LOGIN -->
-<section id="page-login" class="card">
+<section id="page-login" class="card" style="max-width:820px;margin:auto">
   <h2>Accesso Studenti</h2>
-  <p class="muted">Usa il tuo account istituzionale (dominio: <strong>@isisleonardodavincipoggiomarino.it</strong>). Password iniziale: <strong>SG20513</strong>.</p>
+  <p class="muted">Usa il tuo account istituzionale (<strong>@isisleonardodavincipoggiomarino.it</strong>). Password primo accesso: <strong>SG20513</strong>.</p>
   <form id="loginForm" autocomplete="off">
     <label for="email">Email</label>
     <input id="email" type="email" placeholder="nome.cognome@isisleonardodavincipoggiomarino.it" required />
     <label for="password">Password</label>
     <input id="password" type="password" placeholder="Password" required />
-    <button type="submit">Accedi</button>
-    <div id="loginMsg" aria-live="polite" style="margin-top:10px"></div>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button type="submit">Accedi</button>
+      <div id="loginMsg" class="muted" aria-live="polite" style="align-self:center"></div>
+    </div>
   </form>
 
-  <div id="resetPasswordDiv" class="hidden card" style="margin-top:12px">
-    <h3>Reset Password</h3>
-    <p>Hai superato 3 tentativi errati. Inserisci la password generale per resettare:</p>
-    <label for="resetPassInput">Password generale</label>
-    <input id="resetPassInput" type="password" />
-    <button id="resetPassBtn">Reset Password</button>
+  <div id="resetPasswordDiv" class="card hidden" style="margin-top:12px">
+    <h3 style="margin:0 0 8px 0">Reset Password</h3>
+    <p class="muted" style="margin:0 0 8px 0">Hai superato 3 tentativi. Inserisci la password generale per resettare:</p>
+    <input id="resetPassInput" type="password" placeholder="Password generale (SG20513)" />
+    <div style="margin-top:8px"><button id="resetPassBtn">Reset Password</button></div>
   </div>
 </section>
 
-<!-- CAMBIO PASSWORD OBBLIGATORIO (mostrato dopo primo accesso con SG20513) -->
-<section id="page-change-password" class="card hidden">
-  <h2>Cambia la tua password</h2>
-  <p class="muted">Siccome è il primo accesso, devi scegliere una nuova password definitiva.</p>
-  <label for="newPassword">Nuova password</label>
-  <input id="newPassword" type="password" />
-  <button id="saveNewPasswordBtn">Salva nuova password</button>
-  <div id="changePwMsg" style="margin-top:8px"></div>
+<!-- POSTS container -->
+<section id="page-board" class="hidden" style="max-width:920px;margin:12px auto 120px auto">
+  <div id="posts" class="card" style="padding:14px 18px"></div>
 </section>
 
-<!-- BACHECA -->
-<section id="page-board" class="hidden">
-  <section id="posts" class="card"></section>
-  <div class="card">
-    <h2>Bacheca della scuola</h2>
-    <p class="muted">Scrivi liberamente: puoi postare con il tuo account oppure in anonimo.</p>
-    <label for="body">Contenuto</label>
-    <textarea id="body" rows="5" placeholder="Scrivi qui..."></textarea>
-    <label><input type="checkbox" id="anonymous"> Pubblica in anonimo</label>
-    <div class="actions">
-      <button id="postBtn">Pubblica</button>
-      <button id="gotoProfile" class="link">Profilo</button>
-      <button id="gotoSearch" class="link">Cerca Profili</button>
-      <button id="logoutBtn" class="link">Esci</button>
-    </div>
+<!-- PROFILE page -->
+<section id="page-profile" class="card hidden" style="max-width:820px;margin:auto">
+  <h2>Il tuo profilo</h2>
+  <div style="text-align:center;margin-bottom:12px">
+    <img id="profilePicPreview" src="" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:2px solid #e2e8f0;" />
   </div>
-</section>
-
-<!-- PROFILO -->
-<section id="page-profile" class="card hidden">
-  <h2>Profilo Studente</h2>
   <form id="profileForm">
-    <div style="text-align:center;margin-bottom:14px">
-      <img id="profilePicPreview" src="" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:2px solid #e2e8f0;" />
-    </div>
     <label for="p_pic">Foto profilo</label>
     <input id="p_pic" type="file" accept="image/*" />
     <label for="p_username">Username</label>
@@ -97,45 +158,79 @@ button{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;background:var
     <select id="p_sezione"><option value="">-- seleziona --</option><option>A</option><option>B</option><option>C</option><option>D</option></select>
     <label for="p_indirizzo">Indirizzo</label>
     <select id="p_indirizzo"><option value="">-- seleziona --</option><option>OSA</option><option>AFM</option><option>SIA</option><option>Q</option><option>CAT</option><option>ITI</option><option>LC</option><option>LL</option><option>LS</option></select>
-    <div style="display:flex;gap:8px;margin-top:12px">
+    <div style="display:flex;gap:10px;margin-top:12px">
       <button type="submit">Salva Profilo</button>
-      <button type="button" id="deleteProfileBtn" class="link" style="color:#b91c1c">Elimina Profilo</button>
-      <button type="button" id="backBoard" class="link">Torna alla Bacheca</button>
+      <button id="deleteProfileBtn" type="button" class="link" style="align-self:center">Elimina profilo</button>
     </div>
     <div id="profileMsg" class="success-msg"></div>
   </form>
 </section>
 
-<!-- CERCA PROFILI -->
-<section id="page-search" class="card hidden">
+<!-- SEARCH page -->
+<section id="page-search" class="card hidden" style="max-width:820px;margin:auto">
   <h2>Cerca Profili</h2>
   <label for="searchInput">Username</label>
   <input id="searchInput" type="text" placeholder="Inserisci username..." />
-  <button id="searchBtn">Cerca</button>
-  <div id="searchResults" style="margin-top:16px"></div>
-  <button id="backBoardFromSearch" class="link">Torna alla Bacheca</button>
+  <div style="margin-top:10px"><button id="searchBtn">Cerca</button></div>
+  <div id="searchResults" style="margin-top:12px"></div>
 </section>
 
-<!-- POPUP PROFILO (più grande) -->
-<div id="popupProfile" class="popup-profile" role="dialog" aria-hidden="true">
-  <span id="popupClose" class="popup-close">✕</span>
-  <img id="popupPic" src="" alt="Foto profilo" />
-  <h3 id="popupName" style="text-align:center;margin-top:8px"></h3>
-  <p id="popupInfo" style="text-align:center;color:#475569"></p>
-  <hr />
-  <div id="popupPosts" style="max-height:240px;overflow:auto"></div>
+<!-- profile popup -->
+<div id="popup" class="popup" role="dialog" aria-hidden="true">
+  <img id="popupAvatar" class="big-avatar" src="" alt="avatar" />
+  <h3 id="popupName"></h3>
+  <p id="popupClasse" class="muted"></p>
+  <p id="popupIndirizzo" class="muted"></p>
+  <div id="popupPosts" class="posts"></div>
+  <div style="text-align:center;margin-top:10px"><button id="closePopup" class="link">Chiudi</button></div>
+</div>
+
+<!-- image full-screen modal -->
+<div id="imgModal" class="img-modal" style="display:none;align-items:center;justify-content:center">
+  <img id="imgModalImg" src="" alt="full" />
+</div>
+
+<!-- fixed WhatsApp-like input bar -->
+<div class="input-bar" id="inputBar" style="max-width:920px;margin:0 auto;left:0;right:0">
+  <textarea id="inputBody" placeholder="" rows="1"></textarea>
+  <button id="sendBtn" title="Invia">➤</button>
+  <label style="margin-left:6px;display:flex;align-items:center;gap:6px;color:var(--muted)"><input id="anonCheckbox" type="checkbox"> Anonimo</label>
+</div>
+
+<!-- bottom nav -->
+<div class="bottom-nav">
+  <div class="nav-item" id="nav-board" title="Bacheca">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7h18M3 12h18M3 17h18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Bacheca
+  </div>
+  <div class="nav-item" id="nav-create" title="Scrivi">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Scrivi
+  </div>
+  <div class="nav-item" id="nav-search" title="Cerca">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 21l-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Cerca
+  </div>
+  <div class="nav-item" id="nav-profile" title="Profilo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zM6 20c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Profilo
+  </div>
+  <div class="nav-item" id="nav-logout" title="Esci">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17l5-5-5-5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12H9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Esci
+  </div>
 </div>
 
 <script>
-const API_URL = ''; // lascia vuoto per usare lo stesso host
+const API_URL = ''; // se usi server locale lascia stringa vuota
 
-// Pagine
+// pages
 const pageLogin = document.getElementById('page-login');
-const pageChangePassword = document.getElementById('page-change-password');
 const pageBoard = document.getElementById('page-board');
 const pageProfile = document.getElementById('page-profile');
 const pageSearch = document.getElementById('page-search');
 
+// login elements
 const loginForm = document.getElementById('loginForm');
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
@@ -144,391 +239,330 @@ const resetPasswordDiv = document.getElementById('resetPasswordDiv');
 const resetPassInput = document.getElementById('resetPassInput');
 const resetPassBtn = document.getElementById('resetPassBtn');
 
-const newPasswordInput = document.getElementById('newPassword');
-const saveNewPasswordBtn = document.getElementById('saveNewPasswordBtn');
-
-const postBtn = document.getElementById('postBtn');
-const bodyInput = document.getElementById('body');
+// posts
 const postsEl = document.getElementById('posts');
+const inputBody = document.getElementById('inputBody');
+const sendBtn = document.getElementById('sendBtn');
+const anonCheckbox = document.getElementById('anonCheckbox');
 
-const logoutBtn = document.getElementById('logoutBtn');
-const gotoProfile = document.getElementById('gotoProfile');
-const gotoSearch = document.getElementById('gotoSearch');
-
-const p_pic = document.getElementById('p_pic');
+// profile
+const profileForm = document.getElementById('profileForm');
 const profilePicPreview = document.getElementById('profilePicPreview');
+const p_pic = document.getElementById('p_pic');
 const p_username = document.getElementById('p_username');
 const p_classe = document.getElementById('p_classe');
 const p_sezione = document.getElementById('p_sezione');
 const p_indirizzo = document.getElementById('p_indirizzo');
-const profileForm = document.getElementById('profileForm');
 const profileMsg = document.getElementById('profileMsg');
-const backBoard = document.getElementById('backBoard');
 const deleteProfileBtn = document.getElementById('deleteProfileBtn');
+const backBoardBtn = document.getElementById('backBoard');
 
+// search
 const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
 const searchResults = document.getElementById('searchResults');
-const backBoardFromSearch = document.getElementById('backBoardFromSearch');
 
-const popupProfile = document.getElementById('popupProfile');
-const popupClose = document.getElementById('popupClose');
-const popupPic = document.getElementById('popupPic');
+// popup
+const popup = document.getElementById('popup');
+const popupAvatar = document.getElementById('popupAvatar');
 const popupName = document.getElementById('popupName');
-const popupInfo = document.getElementById('popupInfo');
+const popupClasse = document.getElementById('popupClasse');
+const popupIndirizzo = document.getElementById('popupIndirizzo');
 const popupPosts = document.getElementById('popupPosts');
+const closePopup = document.getElementById('closePopup');
 
-let loginAttempts = parseInt(localStorage.getItem('loginAttempts') || '0');
+// img modal
+const imgModal = document.getElementById('imgModal');
+const imgModalImg = document.getElementById('imgModalImg');
+
+// nav
+document.getElementById('nav-board').addEventListener('click', ()=> showPage('board'));
+document.getElementById('nav-create').addEventListener('click', ()=> { showPage('board'); inputBody.focus(); });
+document.getElementById('nav-search').addEventListener('click', ()=> showPage('search'));
+document.getElementById('nav-profile').addEventListener('click', ()=> showPage('profile'));
+document.getElementById('nav-logout').addEventListener('click', ()=> { logout(); });
+
+// helper
+let loginAttempts = parseInt(localStorage.getItem('loginAttempts')||'0');
 let currentUser = null;
 
-function showPage(page) {
-  [pageLogin, pageChangePassword, pageBoard, pageProfile, pageSearch].forEach(p => p.classList.add('hidden'));
+function showPage(name){
+  pageLogin.classList.add('hidden');
+  pageBoard.classList.add('hidden');
+  pageProfile.classList.add('hidden');
+  pageSearch.classList.add('hidden');
   resetPasswordDiv.classList.add('hidden');
-  page.classList.remove('hidden');
+
+  if(name==='login') pageLogin.classList.remove('hidden');
+  if(name==='board') pageBoard.classList.remove('hidden');
+  if(name==='profile') pageProfile.classList.remove('hidden');
+  if(name==='search') pageSearch.classList.remove('hidden');
 }
 
-// AUTOLOGIN se salvato
-const stored = localStorage.getItem('student_user');
-if (stored) {
-  currentUser = JSON.parse(stored);
-  if (currentUser.first_login) {
-    showPage(pageChangePassword);
-  } else {
-    loadProfileToForm();
-    renderPosts();
-    showPage(pageBoard);
-  }
-}
-
-// LOGIN
-loginForm.addEventListener('submit', async (e) => {
+// ----- AUTH -----
+loginForm.addEventListener('submit', async (e)=>{
   e.preventDefault();
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
-  if (!email || !password) { loginMsg.textContent = 'Inserisci email e password'; return; }
-  if (!email.toLowerCase().endsWith('@isisleonardodavincipoggiomarino.it')) { loginMsg.textContent = 'Usa email istituzionale'; return; }
-
-  try {
-    const res = await fetch(`${API_URL}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    if (data.success) {
-      loginAttempts = 0;
-      localStorage.setItem('loginAttempts', '0');
-      currentUser = data.user;
-      localStorage.setItem('student_user', JSON.stringify(currentUser));
-      if (data.first_login || currentUser.first_login) {
-        // obbliga cambio password
-        showPage(pageChangePassword);
-      } else {
-        loadProfileToForm();
-        renderPosts();
-        showPage(pageBoard);
-      }
-    } else {
-      loginAttempts++;
-      localStorage.setItem('loginAttempts', String(loginAttempts));
-      if (loginAttempts >= 3) {
-        resetPasswordDiv.classList.remove('hidden');
-        loginForm.classList.add('hidden');
-        loginMsg.textContent = '';
-      } else {
-        loginMsg.textContent = `Tentativo errato. Tentativi rimasti: ${3 - loginAttempts}`;
-      }
-    }
-  } catch (err) {
-    loginMsg.textContent = 'Errore di rete';
+  if(!email.toLowerCase().endsWith('@isisleonardodavincipoggiomarino.it')){
+    loginMsg.textContent = 'Usa un account @isisleonardodavincipoggiomarino.it';
+    return;
   }
-});
-
-// RESET PASSWORD (dopo 3 tentativi)
-resetPassBtn.addEventListener('click', async () => {
-  if (resetPassInput.value.trim() !== 'SG20513') { alert('Password generale errata'); return; }
-  const email = emailInput.value.trim();
-  if (!email) return alert('Inserisci email per resettare');
-  const res = await fetch(`${API_URL}/resetPassword`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password: 'SG20513' })
+  const res = await fetch(`${API_URL}/login`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({email,password})
   });
   const data = await res.json();
-  if (data.success) {
-    alert('Password resettata a SG20513. Ora prova ad effettuare il login.');
+  if(data.success){
     loginAttempts = 0;
-    localStorage.setItem('loginAttempts', '0');
-    resetPasswordDiv.classList.add('hidden');
-    loginForm.classList.remove('hidden');
-    passwordInput.value = '';
+    localStorage.setItem('loginAttempts','0');
+    currentUser = data.user;
+    localStorage.setItem('student_user',JSON.stringify(currentUser));
+    // if first_login -> force change password via profile page prompt
+    if(currentUser.first_login){
+      alert('Primo accesso: dopo questo login devi cambiare la password. Vai su "Profilo" e salva una nuova password.');
+      showPage('profile');
+      populateProfileForm();
+    } else {
+      populateProfileForm();
+      await renderPosts();
+      showPage('board');
+    }
   } else {
-    alert('Reset fallito');
+    loginAttempts++;
+    localStorage.setItem('loginAttempts',String(loginAttempts));
+    if(loginAttempts>=3){
+      resetPasswordDiv.classList.remove('hidden');
+      loginForm.classList.add('hidden');
+      loginMsg.textContent='';
+    } else {
+      loginMsg.textContent = `Tentativo errato. Tentativi rimasti: ${3-loginAttempts}`;
+    }
   }
 });
 
-// SALVA NUOVA PASSWORD DOPO PRIMO ACCESSO
-saveNewPasswordBtn.addEventListener('click', async () => {
-  const newPwd = document.getElementById('newPassword').value.trim();
-  if (!newPwd) { document.getElementById('changePwMsg').textContent = 'Inserisci una password valida'; return; }
-  const res = await fetch(`${API_URL}/changePassword`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: currentUser.id, newPassword: newPwd })
+// reset password (client asks server to set password back to SG20513 and first_login=1)
+resetPassBtn.addEventListener('click', async ()=>{
+  if(resetPassInput.value.trim() !== 'SG20513'){ alert('Password generale errata'); return; }
+  const email = emailInput.value.trim();
+  const res = await fetch(`${API_URL}/resetPassword`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({email,password:'SG20513'})
   });
   const data = await res.json();
-  if (data.success) {
-    currentUser = data.user;
-    localStorage.setItem('student_user', JSON.stringify(currentUser));
-    loadProfileToForm();
-    renderPosts();
-    showPage(pageBoard);
-  } else {
-    document.getElementById('changePwMsg').textContent = data.message || 'Errore';
-  }
+  if(data.success){ alert('Password resettata a SG20513. Prova ad accedere.'); loginAttempts=0; localStorage.setItem('loginAttempts','0'); resetPasswordDiv.classList.add('hidden'); loginForm.classList.remove('hidden'); passwordInput.value=''; }
 });
 
-// CARICA DATI PROFILO NEL FORM
-function loadProfileToForm() {
-  if (!currentUser) return;
-  p_username.value = currentUser.username || '';
+// logout
+function logout(){
+  localStorage.removeItem('student_user');
+  currentUser = null;
+  showPage('login');
+}
+
+// ----- PROFILE -----
+function populateProfileForm(){
+  if(!currentUser) return;
+  p_username.value = currentUser.username || currentUser.email.split('@')[0];
   p_classe.value = currentUser.classe || '';
   p_sezione.value = currentUser.sezione || '';
   p_indirizzo.value = currentUser.indirizzo || '';
   profilePicPreview.src = currentUser.profile_pic || '';
 }
 
-// SALVA PROFILO (classe,sezione,indirizzo,username,profile_pic)
-profileForm.addEventListener('submit', async (e) => {
+// profile save (also for first-login password change: optional field)
+profileForm.addEventListener('submit', async (e)=>{
   e.preventDefault();
-  if (!currentUser) return alert('Devi essere loggato');
-  const payload = {
-    username: p_username.value.trim(),
-    classe: p_classe.value,
-    sezione: p_sezione.value,
-    indirizzo: p_indirizzo.value,
-    profile_pic: profilePicPreview.src || null
-  };
-  const res = await fetch(`${API_URL}/updateProfile?id=${currentUser.id}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  const data = await res.json();
-  if (data.success) {
-    currentUser = data.user;
-    localStorage.setItem('student_user', JSON.stringify(currentUser));
-    profileMsg.textContent = 'Profilo aggiornato';
-    profileMsg.classList.add('success-msg');
-    renderPosts();
+  if(!currentUser){ alert('Devi essere connesso'); return; }
+
+  // collect data: if a file selected, read base64; otherwise send fields
+  const file = p_pic.files[0];
+  if(file){
+    const b64 = await readFileAsDataURL(file);
+    await sendProfileUpdate({username:p_username.value.trim(),classe:p_classe.value,sezione:p_sezione.value,indirizzo:p_indirizzo.value,profile_pic:b64});
   } else {
-    profileMsg.textContent = data.message || 'Errore';
+    await sendProfileUpdate({username:p_username.value.trim(),classe:p_classe.value,sezione:p_sezione.value,indirizzo:p_indirizzo.value});
   }
+  profileMsg.textContent = 'Profilo aggiornato';
+  profileMsg.style.color = 'var(--success)';
+  await renderPosts();
 });
 
-// UPLOAD / PREVIEW FOTO (salviamo base64 e inviamo al server via updateProfile)
-p_pic.addEventListener('change', () => {
-  const f = p_pic.files[0];
-  if (!f) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    profilePicPreview.src = reader.result;
-    // aggiorna subito il profilo con la nuova immagine
-    if (currentUser) {
-      fetch(`${API_URL}/updateProfile?id=${currentUser.id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profile_pic: reader.result })
-      }).then(r => r.json()).then(d => {
-        if (d.success) {
-          currentUser = d.user;
-          localStorage.setItem('student_user', JSON.stringify(currentUser));
-        }
-      });
-    }
-  };
-  reader.readAsDataURL(f);
-});
-
-backBoard.addEventListener('click', () => showPage(pageBoard));
-
-// ELIMINA PROFILO
-deleteProfileBtn.addEventListener('click', async () => {
-  if (!currentUser) return;
-  if (!confirm('Eliminare definitivamente il profilo?')) return;
-  const res = await fetch(`${API_URL}/deleteProfile`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: currentUser.id })
+// helper to send profile update
+async function sendProfileUpdate(obj){
+  const res = await fetch(`${API_URL}/updateProfile?id=${currentUser.id}`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(obj)
   });
   const data = await res.json();
-  if (data.success) {
-    localStorage.removeItem('student_user');
-    currentUser = null;
-    showPage(pageLogin);
-  } else alert('Errore eliminazione');
+  if(data.success){ currentUser = data.user; localStorage.setItem('student_user',JSON.stringify(currentUser)); }
+}
+
+// read file helper
+function readFileAsDataURL(file){ return new Promise((resolve,reject)=>{ const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(file); }); }
+
+// delete profile (and posts)
+deleteProfileBtn.addEventListener('click', async ()=>{
+  if(!currentUser) return;
+  if(!confirm('Eliminare il profilo? Questa operazione è irreversibile.')) return;
+  await fetch(`${API_URL}/deleteProfile`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: currentUser.id}) });
+  localStorage.removeItem('student_user'); currentUser=null; showPage('login');
 });
 
-// LOGOUT
-logoutBtn.addEventListener('click', () => {
-  localStorage.removeItem('student_user');
-  currentUser = null;
-  showPage(pageLogin);
+// ----- POSTS (WhatsApp-like input + anonymous option) -----
+sendBtn.addEventListener('click', async ()=>{
+  const text = inputBody.value.trim();
+  if(!text) return;
+  const anonymous = document.getElementById('anonCheckbox').checked;
+  // if anonymous, store user_id=null to avoid linking
+  const payload = { user_id: anonymous ? null : currentUser.id, body: text, anonymous: anonymous };
+  await fetch(`${API_URL}/post`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  inputBody.value = '';
+  document.getElementById('anonCheckbox').checked = false;
+  await renderPosts();
 });
 
-gotoProfile.addEventListener('click', () => {
-  loadProfileToForm();
-  showPage(pageProfile);
-});
-gotoSearch.addEventListener('click', () => showPage(pageSearch));
+// render posts
+async function renderPosts(){
+  const res = await fetch(`${API_URL}/posts`);
+  const posts = await res.json();
+  postsEl.innerHTML = '';
+  posts.forEach(p=>{
+    const wrapper = document.createElement('div');
+    wrapper.className='post';
+    const avatarSrc = (p.anonymous || !p.profile_pic) ? '' : p.profile_pic;
+    const avatar = document.createElement('img');
+    avatar.className='avatar';
+    avatar.src = avatarSrc || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44"><rect width="44" height="44" fill="%23eef2ff"/></svg>';
+    if(avatarSrc){ avatar.addEventListener('click', ()=> openPopupForUser(p.user_id)); }
+    const bubble = document.createElement('div');
+    bubble.className='bubble';
+    const author = document.createElement('div');
+    author.className='author';
+    author.textContent = p.anonymous ? 'Anonimo' : p.username;
+    if(!p.anonymous){
+      author.style.cursor='pointer';
+      author.addEventListener('click', ()=> openPopupForUser(p.user_id));
+    }
+    const body = document.createElement('div');
+    // convert @username tags into clickable spans (handles dots and underscores)
+    body.innerHTML = linkifyTags(escapeHtml(p.body));
+    const meta = document.createElement('div');
+    meta.className='time';
+    const ts = new Date(p.timestamp);
+    meta.textContent = ts.toLocaleString();
+    const act = document.createElement('div');
+    act.className='actions';
+    const del = document.createElement('button');
+    del.className='link';
+    del.textContent='Elimina';
+    del.style.color='gray';
+    del.addEventListener('click', ()=> { if(confirm('Eliminare il messaggio?')) deleteMessage(p.id); });
+    act.appendChild(del);
+    bubble.appendChild(author);
+    bubble.appendChild(body);
+    bubble.appendChild(meta);
+    bubble.appendChild(act);
 
-// PUBBLICA MESSAGGIO
-postBtn.addEventListener('click', async () => {
-  if (!currentUser) return alert('Devi essere loggato');
-  const body = bodyInput.value.trim();
-  const anon = document.getElementById('anonymous').checked;
-  if (!body) return alert('Scrivi qualcosa');
-  await fetch(`${API_URL}/post`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id: currentUser.id, body, anonymous: anon })
+    if(!p.anonymous){
+      wrapper.appendChild(avatar);
+    } else {
+      // align bubble when no avatar
+      const spacer = document.createElement('div'); spacer.style.width='44px'; wrapper.appendChild(spacer);
+    }
+    wrapper.appendChild(bubble);
+    postsEl.appendChild(wrapper);
   });
-  bodyInput.value = '';
-  document.getElementById('anonymous').checked = false;
-  renderPosts();
-});
 
-// RICERCA PROFILI -> popup grande con info (senza email)
-searchBtn.addEventListener('click', async () => {
+  // attach handlers to tag links
+  document.querySelectorAll('.tag-link').forEach(el=>{
+    el.addEventListener('click', (e)=>{ e.preventDefault(); const uname = el.dataset.username; openPopupForUsername(uname); });
+  });
+}
+
+// delete message
+async function deleteMessage(id){
+  await fetch(`${API_URL}/deletePost`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id}) });
+  await renderPosts();
+}
+
+// helper escaping
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// convert @tags to clickable elements (accept dots, underscores, numbers and letters)
+function linkifyTags(text){
+  return text.replace(/@([a-zA-Z0-9._]+)/g, (m,uname)=>`<a href="#" class="tag-link" data-username="${uname}">@${uname}</a>`);
+}
+
+// open profile popup by user id
+async function openPopupForUser(id){
+  // load user info and posts (excluding email)
+  const usersRes = await fetch(`${API_URL}/users`);
+  const users = await usersRes.json();
+  const u = users.find(x=>x.id==id);
+  if(!u) return alert('Profilo non trovato');
+  showPopupWithUser(u);
+}
+
+// open popup by username (tag click)
+async function openPopupForUsername(username){
+  const usersRes = await fetch(`${API_URL}/users`);
+  const users = await usersRes.json();
+  const u = users.find(x=>x.username.toLowerCase()===username.toLowerCase());
+  if(!u) return alert('Utente non trovato');
+  showPopupWithUser(u);
+}
+
+async function showPopupWithUser(u){
+  popupAvatar.src = u.profile_pic || '';
+  popupName.textContent = u.username;
+  popupClasse.textContent = `Classe: ${u.classe || '-' } ${u.sezione || ''}`;
+  popupIndirizzo.textContent = `${u.indirizzo || '-' }`;
+  // load that user's posts (non anon)
+  const postsRes = await fetch(`${API_URL}/posts`);
+  const posts = await postsRes.json();
+  const userPosts = posts.filter(p => p.user_id === u.id && !p.anonymous);
+  popupPosts.innerHTML = userPosts.map(p=>`<div style="padding:8px;border-bottom:1px solid #f1f5f9">${escapeHtml(p.body)}</div>`).join('') || '<div class="muted" style="padding:8px">Nessun messaggio</div>';
+  popup.style.display='block';
+  popup.setAttribute('aria-hidden','false');
+
+  // clicking avatar in popup opens fullscreen image
+  popupAvatar.onclick = ()=>{ if(u.profile_pic){ imgModalImg.src = u.profile_pic; imgModal.style.display='flex'; } };
+}
+
+// close popup
+document.getElementById('closePopup').addEventListener('click', ()=>{ popup.style.display='none'; popup.setAttribute('aria-hidden','true'); });
+imgModal.addEventListener('click', ()=>{ imgModal.style.display='none'; imgModalImg.src=''; });
+
+// ----- SEARCH -----
+searchBtn.addEventListener('click', async ()=>{
   const q = searchInput.value.trim().toLowerCase();
   searchResults.innerHTML = '';
   const res = await fetch(`${API_URL}/users`);
   const users = await res.json();
-  const filtered = users.filter(u => u.username && u.username.toLowerCase().includes(q));
-  for (const u of filtered) {
+  users.filter(u => u.username.toLowerCase().includes(q)).forEach(u=>{
     const div = document.createElement('div');
-    div.className = 'card search-user';
-    const postsRes = await fetch(`${API_URL}/posts`);
-    const posts = await postsRes.json();
-    const userPosts = posts.filter(p => p.user_id === u.id && p.anonymous === 0);
-    div.innerHTML = `<div style="display:flex;align-items:center;gap:12px"><img src="${u.profile_pic||''}" /><div><strong class="user-link" data-id="${u.id}" style="cursor:pointer">${u.username}</strong><div style="color:#475569">Classe ${u.classe||''}${u.sezione||''} - ${u.indirizzo||''}</div></div></div><div style="margin-top:8px">${userPosts.map(p => `<div style="padding:6px 0;border-top:1px solid #eef2ff">${escapeHtml(p.body)}</div>`).join('') || '<div class="muted">Nessun messaggio pubblico</div>'}</div>`;
+    div.className='search-user card';
+    div.innerHTML = `<img src="${u.profile_pic||''}" /><div style="flex:1"><strong>${u.username}</strong><div class="muted">Classe ${u.classe || '-'} ${u.sezione || ''} • ${u.indirizzo || '-'}</div></div><div><button class="link view-btn" data-id="${u.id}">Vedi</button></div>`;
     searchResults.appendChild(div);
-    // trigger popup on username or image
-    div.querySelector('.user-link').addEventListener('click', () => showProfilePopup(u.id));
-    div.querySelector('img')?.addEventListener('click', () => showProfilePopup(u.id));
-  }
+    div.querySelector('.view-btn').addEventListener('click', ()=> openPopupForUser(u.id));
+  });
 });
 
-backBoardFromSearch.addEventListener('click', () => showPage(pageBoard));
+// ----- PROFILE image input preview & saving handled in profileForm earlier -----
 
-/* RENDER POSTS: mostra immagine solo se non anonimo */
-async function renderPosts() {
-  const res = await fetch(`${API_URL}/posts`);
-  const posts = await res.json();
-  postsEl.innerHTML = '';
-  posts.forEach(p => {
-    const div = document.createElement('div');
-    div.className = 'post';
-    const picHtml = (!p.anonymous && p.profile_pic) ? `<img src="${p.profile_pic}" data-user="${p.user_id}" />` : `<div style="width:56px;height:56px;border-radius:50%;background:#f1f5f9"></div>`;
-    const author = p.anonymous ? 'Anonimo' : escapeHtml(p.username || 'Sconosciuto');
-    const bodyHtml = linkifyTags(escapeHtml(p.body));
-    div.innerHTML = `${picHtml}<div class="post-content"><strong ${p.anonymous ? '' : `data-user="${p.user_id}" class="open-profile" style="cursor:pointer"`}>${author}</strong><div style="margin-top:8px">${bodyHtml}</div><div class="meta">${new Date(p.timestamp).toLocaleString()} • <span class="link" onclick="deleteMessage(${p.id})">Elimina</span></div></div>`;
-    postsEl.appendChild(div);
-  });
-  // aggiungi listener per aprire popup da nome/foto
-  document.querySelectorAll('.open-profile').forEach(el => {
-    el.addEventListener('click', () => {
-      const id = el.getAttribute('data-user');
-      showProfilePopup(Number(id));
-    });
-  });
-  document.querySelectorAll('img[data-user]').forEach(img => {
-    img.addEventListener('click', () => {
-      const id = img.getAttribute('data-user');
-      showProfilePopup(Number(id));
-    });
-  });
-}
-
-/* Elimina messaggio */
-async function deleteMessage(id) {
-  if (!confirm('Eliminare questo messaggio?')) return;
-  await fetch(`${API_URL}/deletePost`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id })
-  });
+// ----- AUTOLOGIN -----
+const stored = localStorage.getItem('student_user');
+if(stored){
+  currentUser = JSON.parse(stored);
+  populateProfileForm();
   renderPosts();
-}
-
-/* Popup profilo grande (senza email) */
-async function showProfilePopup(userId) {
-  const usersRes = await fetch(`${API_URL}/users`);
-  const users = await usersRes.json();
-  const user = users.find(u => u.id === userId);
-  if (!user) return alert('Utente non trovato');
-  const postsRes = await fetch(`${API_URL}/posts`);
-  const posts = await postsRes.json();
-  const userPosts = posts.filter(p => p.user_id === userId && p.anonymous === 0);
-
-  popupPic.src = user.profile_pic || '';
-  popupName.textContent = user.username || '';
-  popupInfo.textContent = `Classe ${user.classe || ''}${user.sezione || ''} — ${user.indirizzo || ''}`;
-
-  popupPosts.innerHTML = userPosts.length ? userPosts.map(p => `<div style="padding:8px;border-top:1px solid #eef2ff">${escapeHtml(p.body)}</div>`).join('') : '<div style="color:#64748b">Nessun messaggio pubblico</div>';
-
-  popupProfile.style.display = 'block';
-  popupProfile.setAttribute('aria-hidden', 'false');
-}
-popupClose.addEventListener('click', () => {
-  popupProfile.style.display = 'none';
-  popupProfile.setAttribute('aria-hidden', 'true');
-});
-
-/* funzione per trasformare @username in link cliccabile (non naviga, apre popup se trova utente) */
-function linkifyTags(text) {
-  return text.replace(/@([a-zA-Z0-9_.]+)/g, (m, u) => {
-    return `<a href="#" class="tag-link" data-username="${u}">@${u}</a>`;
-  });
-}
-
-// listener globale per tag cliccabili
-document.addEventListener('click', async (e) => {
-  if (e.target.classList.contains('tag-link')) {
-    e.preventDefault();
-    const username = e.target.getAttribute('data-username');
-    // cerca utente esatto per username (es. antonio.mattiello)
-    const res = await fetch(`${API_URL}/users`);
-    const users = await res.json();
-    const findUser = users.find(u => u.username === username);
-    if (findUser) showProfilePopup(findUser.id);
-    else alert('Utente non trovato');
-  }
-});
-
-// escape HTML per sicurezza
-function escapeHtml(str) {
-  if (str === null || str === undefined) return '';
-  return String(str).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]));
-}
-
-// utility: mostra pagina login by default
-if (!currentUser) showPage(pageLogin);
-
-// load posts when page visible
-async function ensureRender() {
-  if (pageBoard.classList.contains('hidden')) return;
-  await renderPosts();
-}
-
-// helper per caricamento iniziale se utente già loggato
-if (currentUser && !currentUser.first_login) {
-  loadProfileToForm();
-  renderPosts();
-  showPage(pageBoard);
+  showPage('board');
+} else {
+  showPage('login');
 }
 
 </script>
 </body>
 </html>
-
