@@ -780,6 +780,157 @@ deleteProfileBtn.addEventListener('click', async () => {
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({ id: currentUser.id })
   });
+
+  // RENDER posts as bubbles (WhatsApp-like)
+async function renderPosts(){
+  const res = await fetch(`${API_URL}/posts`);
+  const posts = await res.json();
+  feed.innerHTML = '';
+  posts.forEach(p => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'post';
+
+    // è il mio messaggio?
+    const isMe = currentUser && !p.anonymous && (p.user_id == currentUser.id);
+
+    // profile pic solo se non anonimo
+    const imgHtml = (!p.anonymous && p.profile_pic)
+      ? `<img src="${p.profile_pic}" class="profile-pic" data-user="${p.user_id}" style="cursor:pointer"/>`
+      : `<div style="width:48px;"></div>`;
+
+    const bubbleClass = isMe ? 'bubble me' : 'bubble';
+    const username = p.anonymous ? 'Anonimo' : (p.username || 'Utente');
+    const time = new Date(p.timestamp).toLocaleString();
+
+    // TAG: @username → span cliccabile
+    const bodyHtml = escapeHtml(p.body)
+      .replace(/@([A-Za-z0-9._\-]+)/g, (m, u) => `<span class="username-link" data-username="${u}">@${u}</span>`)
+      .replace(/\n/g,'<br>');
+
+    // solo autore vede "Elimina"
+    const deleteHtml = isMe
+      ? ` • <span class="link delete-link" data-id="${p.id}" style="color:gray;text-decoration:underline">Elimina</span>`
+      : '';
+
+    wrapper.innerHTML = `
+      ${imgHtml}
+      <div style="flex:1">
+        <div class="${bubbleClass}">
+          ${bodyHtml}
+        </div>
+        <div class="post-meta">
+          ${username} • ${time}${deleteHtml}
+        </div>
+      </div>
+    `;
+    feed.appendChild(wrapper);
+  });
+
+  // delete solo per chi vede il link (quindi autore)
+  document.querySelectorAll('.delete-link').forEach(btn => {
+    btn.onclick = async () => {
+      const id = btn.dataset.id;
+      if(confirm('Eliminare questo messaggio?')){
+        await fetch(`${API_URL}/deletePost`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ id })
+        });
+        renderPosts();
+      }
+    };
+  });
+
+  // click su foto profilo -> popup
+  document.querySelectorAll('img.profile-pic').forEach(img => {
+    img.onclick = () => {
+      const uid = img.dataset.user;
+      showProfilePopupById(uid, true);
+    };
+  });
+
+  // click su tag @username -> trova utente e popup
+  document.querySelectorAll('.username-link').forEach(el => {
+    el.onclick = () => {
+      const uname = el.dataset.username;
+      searchAndOpenPopup(uname);
+    };
+  });
+}
+// search results + open popup profilo
+searchBtn.addEventListener('click', async ()=> {
+  if(!requireLogin()) return;
+  const q = searchInput.value.trim().toLowerCase();
+  searchResults.innerHTML = '';
+
+  const res = await fetch(`${API_URL}/users`);
+  const users = await res.json();
+  const filtered = users.filter(u => u.username && u.username.toLowerCase().includes(q));
+
+  filtered.forEach(u => {
+    const div = document.createElement('div');
+    div.className = 'card search-user';
+    // anteprima profilo
+    div.innerHTML = `
+      <img src="${u.profile_pic||''}"/>
+      <div>
+        <strong class="username-link" data-username="${u.username}">${u.username}</strong>
+        <div class="small-muted">
+          Classe: ${u.classe||'-'} ${u.sezione||''} • ${u.indirizzo||'-'}
+        </div>
+      </div>
+    `;
+    searchResults.appendChild(div);
+
+    // click su username o immagine -> popup profilo completo
+    div.querySelector('.username-link').onclick = () => showProfilePopupById(u.id, true);
+    div.querySelector('img')?.addEventListener('click', ()=> showProfilePopupById(u.id, true));
+  });
+});
+// cerca utente per username e apri popup
+async function searchAndOpenPopup(username){
+  const res = await fetch(`${API_URL}/users`);
+  const users = await res.json();
+  const found =
+    users.find(u => u.username && u.username.toLowerCase() === username.toLowerCase()) ||
+    users.find(u => u.username && u.username.toLowerCase().includes(username.toLowerCase()));
+  if(found) showProfilePopupById(found.id, true);
+}
+
+// popup profilo by id
+async function showProfilePopupById(id, allowImageOpen){
+  const resUsers = await fetch(`${API_URL}/users`);
+  const users = await resUsers.json();
+  const user = users.find(u => u.id == id);
+  if(!user) return alert('Utente non trovato');
+
+  popupImg.src = user.profile_pic || '';
+  popupName.textContent = user.username || '';
+  popupClass.textContent = `Classe: ${user.classe || '-'} ${user.sezione || ''}`;
+  popupAddress.textContent = `Indirizzo: ${user.indirizzo || '-'}`;
+
+  const resPosts = await fetch(`${API_URL}/posts`);
+  const posts = await res.json();
+  const userPosts = posts.filter(p => p.user_id == id && !p.anonymous).slice(0,5);
+
+  popupPosts.innerHTML = userPosts.length
+    ? userPosts.map(p => `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9">${escapeHtml(p.body)}</div>`).join('')
+    : '<div class="small-muted">Nessun messaggio pubblico</div>';
+
+  popup.style.display = 'block';
+  popup.classList.remove('hidden');
+
+  if(allowImageOpen && popupImg.src){
+    popupImg.style.cursor = 'pointer';
+    popupImg.onclick = () => {
+      const w = window.open();
+      w.document.write(`<img src="${popupImg.src}" style="width:100%;height:auto">`);
+    };
+  } else {
+    popupImg.onclick = null;
+  }
+}
+
   localStorage.removeItem('student_user');
   currentUser = null;
   showOnly(pageLogin);
@@ -787,3 +938,4 @@ deleteProfileBtn.addEventListener('click', async () => {
 </script>
 </body>
 </html>
+
