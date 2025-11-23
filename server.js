@@ -30,7 +30,7 @@ function usernameOk(u){
   return /^[A-Za-z0-9._\-]+$/.test(u);
 }
 
-// Create tables
+// CREA TABELLE (non cancella dati se esiste già)
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,7 +53,7 @@ db.serialize(() => {
   )`);
 });
 
-// Serve index.html
+// SERVE FRONTEND
 app.get('/', (req,res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 // SIGNUP
@@ -108,7 +108,7 @@ app.post('/login', (req,res) => {
   });
 });
 
-// RESET PASSWORD (forgot)
+// RESET PASSWORD
 app.post('/resetPassword', (req,res) => {
   const { email, newPassword } = req.body;
   if(!email || !newPassword){
@@ -178,7 +178,7 @@ app.post('/post', (req,res) => {
     });
 });
 
-// GET POSTS
+// GET POSTS (+ username, profile pic)
 app.get('/posts', (req,res) => {
   db.all(
     `SELECT posts.*, users.username, users.profile_pic
@@ -193,7 +193,7 @@ app.get('/posts', (req,res) => {
   );
 });
 
-// GET USERS
+// GET USERS (per cerca & popup)
 app.get('/users', (req,res) => {
   db.all(
     `SELECT id, username, classe, sezione, indirizzo, profile_pic FROM users`,
@@ -205,13 +205,23 @@ app.get('/users', (req,res) => {
   );
 });
 
-// DELETE POST
+// DELETE POST (solo autore)
 app.post('/deletePost', (req,res) => {
   const id = req.body.id || req.query.id;
-  if(!id) return res.json({ success:false, message:'id mancante' });
-  db.run(`DELETE FROM posts WHERE id = ?`, [id], function(err){
-    if(err) return res.status(500).json({ success:false, message: err.message });
-    return res.json({ success:true });
+  const user_id = req.body.user_id;
+  if(!id || !user_id) return res.json({ success:false, message:'Dati mancanti' });
+
+  // controlla che il post sia dell'utente
+  db.get(`SELECT user_id FROM posts WHERE id = ?`, [id], (err,row)=>{
+    if(err) return res.status(500).json({ success:false, message:err.message });
+    if(!row) return res.json({ success:false, message:'Post non trovato' });
+    if(row.user_id != user_id){
+      return res.json({ success:false, message:'Non puoi cancellare il post di un altro utente' });
+    }
+    db.run(`DELETE FROM posts WHERE id = ?`, [id], function(err2){
+      if(err2) return res.status(500).json({ success:false, message: err2.message });
+      return res.json({ success:true });
+    });
   });
 });
 
