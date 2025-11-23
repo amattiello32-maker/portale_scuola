@@ -4,70 +4,85 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Portale Studenti — Scuola</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
-
+<style>
+/* Base + più grande come richiesto */
+:root{--bg:#f6f8ff;--card:#fff;--accent:#2563eb;--muted:#475569;--success:#065f46}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{font-family:Inter,system-ui,Arial;margin:0;background:linear-gradient(180deg,var(--bg),#eef2ff);font-size:20px}
+.container{max-width:920px;margin:0 auto;padding-bottom:90px} /* leave room for bottom nav */
+.card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 8px 30px rgba(15,23,42,0.06);margin:16px 0}
+label{display:block;font-size:15px;color:var(--muted);margin-top:10px}
+input[type="text"],input[type="email"],input[type="password"],textarea,select{width:100%;padding:12px;border:1px solid #e6edf9;border-radius:10px;font-size:16px}
+textarea{resize:vertical}
+button{padding:10px 14px;border-radius:10px;border:0;cursor:pointer;background:var(--accent);color:#fff;font-size:16px}
+.muted{color:var(--muted);font-size:15px}
+.hidden{display:none}
+.post{margin:12px 0; display:flex; gap:12px; align-items:flex-end}
+.bubble{max-width:78%;padding:12px 14px;border-radius:18px;background:#e6f0ff;box-shadow:0 2px 6px rgba(0,0,0,0.04);font-size:16px;line-height:1.3}
+.bubble.me{background:#dcf8c6; align-self:flex-end}
+.post-meta{font-size:13px;color:#6b7280;margin-top:6px}
+.profile-pic{width:48px;height:48px;border-radius:50%;object-fit:cover}
+.bottom-bar{position:fixed;left:0;right:0;bottom:0;height:64px;background:#fff;border-top:1px solid #e6edf9;display:flex;justify-content:space-around;align-items:center;z-index:50}
+.bottom-bar button{background:transparent;border:0;color:var(--muted);font-size:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center}
+.input-area{position:fixed;left:0;right:0;bottom:64px;padding:10px 12px;background:transparent;display:flex;gap:8px;align-items:center;z-index:45}
+.input-area input{flex:1;padding:12px;border-radius:24px;border:1px solid #e6edf9}
+.input-area button{padding:10px 14px;border-radius:24px}
+.search-user{display:flex;align-items:center;gap:12px;padding:8px 0}
+.search-user img{width:56px;height:56px;border-radius:50%;object-fit:cover}
+.popup{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;padding:18px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.25);z-index:1000;max-width:520px;width:92%}
+.popup img{width:120px;height:120px;border-radius:50%;object-fit:cover;display:block;margin:8px auto}
+.small-muted{color:#6b7280;font-size:14px}
+.link{background:transparent;border:0;color:#6b7280;text-decoration:underline;cursor:pointer}
+.err{color:#b91c1c}
+.success{color:var(--success)}
+/* Larger clickable username style */
+.username-link{color:var(--accent);cursor:pointer}
+/* center login box */
+.full-height-center{min-height:70vh;display:flex;align-items:center;justify-content:center}
+/* enlarge bottom nav icons/text */
+.bottom-bar button span{font-size:12px;margin-top:4px}
+</style>
 </head>
 <body>
-
-<!-- LOGIN FULLSCREEN (nuovo) -->
-<section id="page-login" class="login-fullscreen">
-  <div class="login-card">
-    <h1 class="login-title">Accedi al Portale Studenti</h1>
-
-    <form id="loginForm" class="login-form">
-      <input type="email" id="email" placeholder="Email istituzionale" required />
-      <input type="password" id="password" placeholder="Password" required />
-      <div style="display:flex;gap:8px;margin-top:12px">
-        <button type="submit" class="btn-primary">Accedi</button>
-        <button type="button" id="btnShowReset" class="link-btn">Hai dimenticato?</button>
-      </div>
-      <div id="loginMsg" class="muted" style="margin-top:10px"></div>
-    </form>
-
-    <div class="divider"></div>
-
-    <p class="signup-text">Non hai un account?
-      <button id="goToSignup" class="link-btn">Registrati</button>
-    </p>
-  </div>
-</section>
-
-<!-- SIGNUP FULLSCREEN -->
-<section id="page-signup" class="signup-fullscreen hidden">
-  <div class="login-card">
-    <h1 class="login-title">Crea un account</h1>
-
-    <form id="signupForm" class="login-form">
-      <input type="text" id="s_username" placeholder="Username (opzionale)" />
-      <input type="email" id="s_email" placeholder="Email" required />
-      <input type="password" id="s_password" placeholder="Password" required />
-      <input type="password" id="s_confirm" placeholder="Conferma password" required />
-      <button type="submit" class="btn-primary">Registrati</button>
-    </form>
-
-    <div class="divider"></div>
-
-    <p class="signup-text">Hai già un account?
-      <button id="goToLogin" class="link-btn">Accedi</button>
-    </p>
-  </div>
-</section>
-
-<!-- MAIN APP CONTAINER: bacheca, profilo, ricerca ecc. -->
 <div class="container">
 
-  <!-- PAGE: LOGIN (legacy - hidden because fullscreen controls actual login) -->
-  <section id="page-login-legacy" class="card hidden">
+  <!-- PAGE: LOGIN (always first) -->
+  <section id="page-login" class="card">
     <h2>Accesso Studenti</h2>
     <p class="muted">Usa account istituzionale. Password generale.</p>
+
+    <div class="full-height-center">
+      <form id="loginForm" style="width:100%;max-width:520px">
+        <label>Email</label>
+        <input id="email" type="email" placeholder="nome.cognome@isisleonardodavincipoggiomarino.it" required />
+        <label>Password</label>
+        <input id="password" type="password" placeholder="Password" required />
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button type="submit">Accedi</button>
+          <button type="button" id="btnShowReset" class="link" style="align-self:center">Hai dimenticato?</button>
+        </div>
+        <div id="loginMsg" class="muted" style="margin-top:10px"></div>
+      </form>
+    </div>
+
+    <!-- Reset (optional, shown only dopo >3 tentativi) -->
+    <div id="resetBox" class="hidden" style="margin-top:14px">
+      <h3>Reset password (opzionale)</h3>
+      <p class="muted">Dopo 3 tentativi puoi resettare la password alla password iniziale (<strong>SG20513</strong>) se lo desideri.</p>
+      <label>Inserisci password generale per confermare</label>
+      <input id="resetPassInput" type="password" placeholder="SG20513" />
+      <div style="margin-top:8px">
+        <button id="resetPassBtn">Reimposta</button>
+      </div>
+    </div>
   </section>
 
   <!-- PAGE: BOARD -->
   <section id="page-board" class="card hidden">
     <h2>Bacheca</h2>
     <div id="feed" aria-live="polite"></div>
+    <!-- the input area is fixed at bottom (below) -->
   </section>
 
   <!-- PAGE: PROFILE -->
@@ -80,7 +95,7 @@
       <label>Foto profilo</label>
       <input id="p_pic" type="file" accept="image/*" />
       <label>Username</label>
-      <input id="p_username" type="text" placeholder="Username" />
+      <input id="p_username" type="text" placeholder="nome-utente" />
       <label>Classe</label>
       <select id="p_classe"><option value="">-- seleziona --</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
       <label>Sezione</label>
@@ -88,14 +103,11 @@
       <label>Indirizzo</label>
       <select id="p_indirizzo"><option value="">-- seleziona --</option><option>OSA</option><option>AFM</option><option>SIA</option><option>Q</option><option>CAT</option><option>ITI</option><option>LC</option><option>LL</option><option>LS</option></select>
       <div style="display:flex;gap:8px;margin-top:12px">
-        <button type="submit" class="btn-primary">Salva Profilo</button>
-        <button type="button" id="deleteProfileBtn" class="link-btn">Elimina Profilo</button>
+        <button type="submit">Salva Profilo</button>
+        <button type="button" id="deleteProfileBtn" class="link">Elimina Profilo</button>
       </div>
       <div id="profileMsg" style="margin-top:10px"></div>
     </form>
-    <div style="margin-top:12px">
-      <button id="btnChangePassword" class="link-btn">Cambia password</button>
-    </div>
   </section>
 
   <!-- PAGE: SEARCH -->
@@ -104,45 +116,43 @@
     <label>Cerca username</label>
     <input id="searchInput" type="text" placeholder="es: nome.cognome" />
     <div style="margin-top:12px">
-      <button id="searchBtn" class="btn-primary">Cerca</button>
+      <button id="searchBtn">Cerca</button>
     </div>
     <div id="searchResults" style="margin-top:16px"></div>
   </section>
 
-</div>
+  <!-- Popup profile (click result) -->
+  <div id="popup" class="popup hidden" role="dialog" aria-modal="true" style="display:none">
+    <button id="popupClose" class="link" style="position:absolute;right:12px;top:10px">Chiudi</button>
+    <img id="popupImg" src="" alt="Foto profilo" style="cursor:pointer"/>
+    <h3 id="popupName"></h3>
+    <div id="popupClass" class="small-muted"></div>
+    <div id="popupAddress" class="small-muted"></div>
+    <div id="popupPosts" style="margin-top:12px"></div>
+  </div>
 
-<!-- Popup profile -->
-<div id="popup" class="popup hidden" role="dialog" aria-modal="true" style="display:none">
-  <button id="popupClose" class="link-btn" style="position:absolute;right:12px;top:10px">Chiudi</button>
-  <img id="popupImg" src="" alt="Foto profilo" style="width:120px;height:120px;border-radius:50%;object-fit:cover;display:block;margin:8px auto"/>
-  <h3 id="popupName"></h3>
-  <div id="popupClass" class="small-muted"></div>
-  <div id="popupAddress" class="small-muted"></div>
-  <div id="popupPosts" style="margin-top:12px"></div>
 </div>
 
 <!-- Input area (WhatsApp style) -->
 <div class="input-area" id="inputArea" style="display:none">
-  <input id="messageInput" placeholder="Scrivi il messaggio" aria-label="Scrivi il messaggio"/>
+  <input id="messageInput" placeholder="" aria-label="Scrivi il messaggio" />
   <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="anonymous"> Anonimo</label>
-  <button id="sendBtn" class="btn-primary">Invia</button>
+  <button id="sendBtn">Invia</button>
 </div>
 
-<!-- Bottom navigation -->
+<!-- Bottom navigation (Instagram-like) -->
 <div class="bottom-bar" aria-hidden="false">
-  <button id="navBoard" class="nav-btn"><span>Bacheca</span></button>
-  <button id="navProfile" class="nav-btn"><span>Profilo</span></button>
-  <button id="navSearch" class="nav-btn"><span>Cerca</span></button>
-  <button id="navLogout" class="nav-btn"><span>Esci</span></button>
+  <button id="navBoard"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M3 13h8V3H3v10zm0 8h8v-6H3v6zM13 21h8V11h-8v10zM13 3v6h8V3h-8z"/></svg><span>Bacheca</span></button>
+  <button id="navProfile"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z"/></svg><span>Profilo</span></button>
+  <button id="navSearch"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3v.8l5 4.9L20.4 19l-4.9-5zM6.5 11A4.5 4.5 0 1 1 11 15.5 4.5 4.5 0 0 1 6.5 11z"/></svg><span>Cerca</span></button>
+  <button id="navLogout"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M16 13v-2H7V8l-5 4 5 4v-3zM20 3h-8v2h8v14h-8v2h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/></svg><span>Esci</span></button>
 </div>
 
-<!-- SCRIPT: frontend logic -->
 <script>
-const API_URL = ''; // same origin
+const API_URL = ''; // leave blank if same origin
 
-// Elements
+// DOM
 const pageLogin = document.getElementById('page-login');
-const pageSignup = document.getElementById('page-signup');
 const pageBoard = document.getElementById('page-board');
 const pageProfile = document.getElementById('page-profile');
 const pageSearch = document.getElementById('page-search');
@@ -151,11 +161,10 @@ const loginForm = document.getElementById('loginForm');
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const loginMsg = document.getElementById('loginMsg');
+const resetBox = document.getElementById('resetBox');
+const resetPassInput = document.getElementById('resetPassInput');
+const resetPassBtn = document.getElementById('resetPassBtn');
 const btnShowReset = document.getElementById('btnShowReset');
-
-const signupForm = document.getElementById('signupForm');
-const goToSignup = document.getElementById('goToSignup');
-const goToLogin = document.getElementById('goToLogin');
 
 const feed = document.getElementById('feed');
 const inputArea = document.getElementById('inputArea');
@@ -172,7 +181,6 @@ const p_sezione = document.getElementById('p_sezione');
 const p_indirizzo = document.getElementById('p_indirizzo');
 const profileMsg = document.getElementById('profileMsg');
 const deleteProfileBtn = document.getElementById('deleteProfileBtn');
-const btnChangePassword = document.getElementById('btnChangePassword');
 
 const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
@@ -191,37 +199,58 @@ const navProfile = document.getElementById('navProfile');
 const navSearch = document.getElementById('navSearch');
 const navLogout = document.getElementById('navLogout');
 
+let loginAttempts = parseInt(localStorage.getItem('loginAttempts')||'0');
 let currentUser = null;
 
-// helpers
+// utils
 function showOnly(pageEl){
-  // hide all main pages (not login fullscreen)
-  [pageBoard,pageProfile,pageSearch].forEach(p => p.classList.add('hidden'));
+  [pageLogin,pageBoard,pageProfile,pageSearch].forEach(p => p.classList.add('hidden'));
+  resetBox.classList.add('hidden');
   pageEl.classList.remove('hidden');
+  // show/hide input area (only on board)
   inputArea.style.display = (pageEl === pageBoard) ? 'flex' : 'none';
 }
+function passwordPolicyOk(pw){
+  if(!pw || pw.length < 8) return false;
+  if(!/[A-Z]/.test(pw)) return false;
+  if(!/[!_\-@]/.test(pw)) return false;
+  return true;
+}
+function usernameOk(u){
+  if(!u) return false;
+  if(/\s/.test(u)) return false;
+  return /^[A-Za-z0-9._\-]+$/.test(u);
+}
 
-// session
+// enforce login before anything
+function requireLogin(){
+  if(!currentUser){
+    showOnly(pageLogin);
+    return false;
+  }
+  return true;
+}
+
+// Auto-login if stored
 const stored = localStorage.getItem('student_user');
 if(stored){
-  try{ currentUser = JSON.parse(stored); } catch(e){ localStorage.removeItem('student_user'); }
+  try{
+    currentUser = JSON.parse(stored);
+  }catch(e){ localStorage.removeItem('student_user'); }
 }
 if(currentUser){
-  // if user logged show main app
-  pageLogin.classList.add('hidden');
-  pageSignup.classList.add('hidden');
+  // if first_login true, force change password flow by showing profile page to change password
   if(currentUser.first_login){
+    // show profile page but with instruction to change password
     showOnly(pageProfile);
-    profileMsg.innerHTML = '<span class="err">Primo accesso: modifica la password.</span>';
+    profileMsg.innerHTML = '<span class="err">Primo accesso: modifica la password usando il modulo "Salva Profilo" inserendo anche la nuova password nella casella corrispondente.</span>';
   } else {
     showOnly(pageBoard);
     loadProfileToForm();
     renderPosts();
   }
 } else {
-  // show login fullscreen
-  pageLogin.classList.remove('hidden');
-  pageSignup.classList.add('hidden');
+  showOnly(pageLogin);
 }
 
 // LOGIN
@@ -229,87 +258,75 @@ loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
-  if(!email || !password){ loginMsg.textContent = "Inserisci email e password"; return; }
+  if(!email.toLowerCase().endsWith('@isisleonardodavincipoggiomarino.it')){
+    loginMsg.textContent = `Devi usare un account con dominio @isisleonardodavincipoggiomarino.it`;
+    return;
+  }
   try{
-    const res = await fetch(API_URL + '/api/login', {
-      method: 'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ email, password })
-    });
+    const res = await fetch(`${API_URL}/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ email, password }) });
     const data = await res.json();
     if(data.success){
+      loginAttempts = 0;
+      localStorage.setItem('loginAttempts','0');
       currentUser = data.user;
       localStorage.setItem('student_user', JSON.stringify(currentUser));
-      pageLogin.classList.add('hidden');
-      pageSignup.classList.add('hidden');
-      if(currentUser.first_login){
+      if(data.first_login || currentUser.first_login){
+        // Force change: show profile page (we will use profile save to change password as well)
+        profileMsg.innerHTML = '<span class="err">Primo accesso: dopo il login devi scegliere una nuova password (min 8, 1 maiuscola, un simbolo ! _ - @)</span>';
         showOnly(pageProfile);
-        profileMsg.innerHTML = '<span class="err">Primo accesso: modifica la password.</span>';
+        loadProfileToForm();
       } else {
         showOnly(pageBoard);
         loadProfileToForm();
         renderPosts();
       }
     } else {
-      loginMsg.textContent = data.message || 'Credenziali errate';
+      loginAttempts++;
+      localStorage.setItem('loginAttempts', String(loginAttempts));
+      if(loginAttempts > 3){
+        // show optional reset box
+        resetBox.classList.remove('hidden');
+      }
+      loginMsg.textContent = data.message || 'Errore di login';
     }
-  } catch(err){
-    console.error(err); loginMsg.textContent = 'Errore di rete';
+  }catch(err){
+    loginMsg.textContent = 'Errore di rete';
   }
 });
 
-// GO TO SIGNUP / BACK TO LOGIN
-goToSignup.addEventListener('click', () => {
-  pageLogin.classList.add('hidden');
-  pageSignup.classList.remove('hidden');
-});
-goToLogin.addEventListener('click', () => {
-  pageSignup.classList.add('hidden');
-  pageLogin.classList.remove('hidden');
+// show/hide reset box manually
+btnShowReset.addEventListener('click', ()=> {
+  resetBox.classList.toggle('hidden');
 });
 
-// SIGNUP
-signupForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const username = document.getElementById('s_username').value.trim();
-  const email = document.getElementById('s_email').value.trim();
-  const password = document.getElementById('s_password').value;
-  const confirm = document.getElementById('s_confirm').value;
-  if(!email || !password){ alert('Inserisci email e password'); return; }
-  if(password !== confirm){ alert('Le password non coincidono'); return; }
-  try{
-    const res = await fetch(API_URL + '/api/signup', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ username, email, password })
-    });
-    const data = await res.json();
-    if(data.success){
-      // auto-login after signup
-      currentUser = data.user;
-      localStorage.setItem('student_user', JSON.stringify(currentUser));
-      pageSignup.classList.add('hidden');
-      pageLogin.classList.add('hidden');
-      showOnly(pageProfile);
-      profileMsg.innerHTML = '<span class="success">Account creato. Completa il profilo.</span>';
-      loadProfileToForm();
-    } else {
-      alert(data.message || 'Errore registrazione');
-    }
-  }catch(err){ console.error(err); alert('Errore di rete'); }
+// RESET (optional)
+resetPassBtn.addEventListener('click', async ()=>{
+  const email = emailInput.value.trim();
+  const val = resetPassInput.value;
+  if(val !== 'SG20513'){ alert('Password generale errata'); return; }
+  if(!email) { alert('Inserisci email per il reset'); return; }
+  const res = await fetch(`${API_URL}/resetPassword`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ email }) });
+  const data = await res.json();
+  if(data.success){
+    alert('Password resettata. Ora effettua il login con SG20513 e scegli una nuova password.');
+    loginAttempts = 0; localStorage.setItem('loginAttempts','0');
+    resetBox.classList.add('hidden');
+    showOnly(pageLogin);
+  } else {
+    alert(data.message || 'Errore');
+  }
 });
 
-// NAV
-navBoard.addEventListener('click', ()=>{ if(requireLogin()) showOnly(pageBoard); renderPosts(); });
-navProfile.addEventListener('click', ()=>{ if(requireLogin()) showOnly(pageProfile); loadProfileToForm(); });
-navSearch.addEventListener('click', ()=>{ if(requireLogin()) showOnly(pageSearch); });
-navLogout.addEventListener('click', ()=>{ localStorage.removeItem('student_user'); currentUser=null; pageLogin.classList.remove('hidden'); pageSignup.classList.add('hidden'); showOnly(pageBoard); });
+// NAV bottom
+navBoard.addEventListener('click', ()=>{ if(requireLogin()) { showOnly(pageBoard); renderPosts(); } });
+navProfile.addEventListener('click', ()=>{ if(requireLogin()) { showOnly(pageProfile); loadProfileToForm(); } });
+navSearch.addEventListener('click', ()=>{ if(requireLogin()) { showOnly(pageSearch); } });
+navLogout.addEventListener('click', ()=>{ localStorage.removeItem('student_user'); currentUser = null; showOnly(pageLogin); });
 
-// Require login
-function requireLogin(){ if(!currentUser){ pageLogin.classList.remove('hidden'); pageSignup.classList.add('hidden'); return false; } return true; }
-
-// Load profile to form
+// Load profile into form
 function loadProfileToForm(){
   if(!currentUser) return;
-  p_username.value = currentUser.username || '';
+  p_username.value = currentUser.username || currentUser.email?.split('@')[0] || '';
   p_classe.value = currentUser.classe || '';
   p_sezione.value = currentUser.sezione || '';
   p_indirizzo.value = currentUser.indirizzo || '';
@@ -317,164 +334,204 @@ function loadProfileToForm(){
   profileMsg.innerHTML = '';
 }
 
-// PROFILE save
+// Save profile (also used to set new password on first login)
 profileForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  if(!currentUser){ alert('Devi prima effettuare il login'); return; }
+  if(!currentUser) { alert('Devi prima effettuare il login'); showOnly(pageLogin); return; }
   const username = p_username.value.trim();
   const classe = p_classe.value;
   const sezione = p_sezione.value;
   const indirizzo = p_indirizzo.value;
-  const payload = { id: currentUser.id, username, classe, sezione, indirizzo };
+  if(!usernameOk(username)){ profileMsg.innerHTML = '<span class="err">Username non valido (no spazi; usa lettere, numeri, punto, - o _)</span>'; return; }
+  // allow optional new password input via prompt when first_login
+  let newPassword = null;
+  if(currentUser.first_login){
+    newPassword = prompt('Primo accesso: scegli una nuova password (min 8, 1 maiuscola, almeno un simbolo ! _ - @):','');
+    if(!passwordPolicyOk(newPassword)){ alert('Password non valida secondo policy'); return; }
+  }
+  // profile_pic may be base64 from profilePicPreview.src if user selected earlier
+  const payload = { username, classe, sezione, indirizzo };
   if(profilePicPreview.src && profilePicPreview.src.startsWith('data:')) payload.profile_pic = profilePicPreview.src;
-  try{
-    const res = await fetch(API_URL + '/api/updateProfile', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-    const data = await res.json();
-    if(data.success){
-      currentUser = data.user;
-      localStorage.setItem('student_user', JSON.stringify(currentUser));
-      profileMsg.innerHTML = '<span class="success">Profilo aggiornato</span>';
-      showOnly(pageBoard);
-      renderPosts();
-    } else profileMsg.innerHTML = `<span class="err">${data.message||'Errore'}</span>`;
-  }catch(err){ console.error(err); profileMsg.innerHTML = '<span class="err">Errore di rete</span>'; }
-});
+  if(newPassword) payload.password = newPassword;
 
-// change password
-btnChangePassword.addEventListener('click', async () => {
-  if(!currentUser) return alert('Devi essere loggato');
-  const oldp = prompt('Password attuale:','');
-  const newp = prompt('Nuova password:','');
-  if(!oldp || !newp) return alert('Input mancante');
-  const res = await fetch(API_URL + '/api/changePassword', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: currentUser.id, oldPassword: oldp, newPassword: newp })});
+  const res = await fetch(`${API_URL}/updateProfile?id=${currentUser.id}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
   const data = await res.json();
-  if(data.success) alert('Password cambiata'); else alert(data.message || 'Errore');
+  if(data.success){
+    currentUser = data.user;
+    localStorage.setItem('student_user', JSON.stringify(currentUser));
+    profileMsg.innerHTML = '<span class="success">Profilo aggiornato</span>';
+    renderPosts();
+    showOnly(pageBoard);
+  } else {
+    profileMsg.innerHTML = `<span class="err">${data.message || 'Errore aggiornamento'}</span>`;
+  }
 });
 
-// preview profile pic
+// upload profile pic client-side preview
 p_pic.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
-  reader.onload = () => profilePicPreview.src = reader.result;
+  reader.onload = () => {
+    profilePicPreview.src = reader.result;
+  };
   reader.readAsDataURL(file);
 });
 
-// POSTS
+// POST (send message) — input area like WhatsApp
 sendBtn.addEventListener('click', async () => {
-  if(!currentUser){ pageLogin.classList.remove('hidden'); return; }
+  if(!currentUser){ alert('Devi effettuare il login'); showOnly(pageLogin); return; }
   const body = messageInput.value.trim();
   const anonymous = anonymousCheckbox.checked;
   if(!body) return;
-  await fetch(API_URL + '/api/posts', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ user_id: currentUser.id, body, anonymous })});
-  messageInput.value='';
+  await fetch(`${API_URL}/post`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ user_id: currentUser.id, body, anonymous }) });
+  messageInput.value = '';
   renderPosts();
 });
 
+// RENDER posts as bubbles (WhatsApp-like)
 async function renderPosts(){
-  try{
-    const res = await fetch(API_URL + '/api/posts');
-    const posts = await res.json();
-    feed.innerHTML = '';
-    posts.forEach(p => {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'post';
-      const isMe = currentUser && !p.anonymous && (p.user_id == currentUser.id);
-      const imgHtml = (!p.anonymous && p.profile_pic) ? `<img src="${p.profile_pic}" class="profile-pic" data-user="${p.user_id}" style="cursor:pointer"/>` : `<div style="width:48px;"></div>`;
-      const bubbleClass = isMe ? 'bubble me' : 'bubble';
-      const username = p.anonymous ? 'Anonimo' : (p.username || 'Utente');
-      const time = new Date(p.timestamp).toLocaleString();
-      const bodyHtml = escapeHtml(p.body).replace(/\n/g,'<br>');
-      wrapper.innerHTML = `
-        ${imgHtml}
-        <div style="flex:1">
-          <div class="${bubbleClass}">${bodyHtml}</div>
-          <div class="post-meta">${username} • ${time} • <span class="link delete-post" data-id="${p.id}">Elimina</span></div>
+  const res = await fetch(`${API_URL}/posts`);
+  const posts = await res.json();
+  feed.innerHTML = '';
+  posts.forEach(p => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'post';
+    // left or right bubble depending if author is currentUser and not anonymous
+    const isMe = currentUser && !p.anonymous && (p.user_id == currentUser.id);
+    // profile pic only if not anonymous
+    const imgHtml = (!p.anonymous && p.profile_pic) ? `<img src="${p.profile_pic}" class="profile-pic" data-user="${p.user_id}" style="cursor:pointer"/>` : `<div style="width:48px;"></div>`;
+    const bubbleClass = isMe ? 'bubble me' : 'bubble';
+    const username = p.anonymous ? 'Anonimo' : (p.username || 'Utente');
+    const time = new Date(p.timestamp).toLocaleString();
+    const bodyHtml = escapeHtml(p.body).replace(/@([A-Za-z0-9._\-]+)/g, (m, u) => `<span class="username-link" data-username="${u}">@${u}</span>`).replace(/\n/g,'<br>');
+    wrapper.innerHTML = `
+      ${imgHtml}
+      <div style="flex:1">
+        <div class="${bubbleClass}">
+          ${bodyHtml}
         </div>
-      `;
-      feed.appendChild(wrapper);
-    });
-    // bind events
-    document.querySelectorAll('.delete-post').forEach(btn => {
-      btn.onclick = async () => {
-        const id = btn.dataset.id;
-        if(confirm('Eliminare questo messaggio?')) {
-          await fetch(API_URL + '/api/deletePost', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id })});
-          renderPosts();
-        }
-      };
-    });
-    document.querySelectorAll('img.profile-pic').forEach(img => img.onclick = () => {
-      const uid = img.dataset.user; showProfilePopupById(uid,true);
-    });
-  }catch(err){ console.error(err); }
+        <div class="post-meta">${username} • ${time} • <span class="link" data-id="${p.id}" style="color:gray;text-decoration:underline">Elimina</span></div>
+      </div>
+    `;
+    feed.appendChild(wrapper);
+  });
+
+  // add event listeners: delete, profile popup, tag click
+  document.querySelectorAll('.link[data-id]').forEach(btn => {
+    btn.onclick = async () => {
+      const id = btn.dataset.id;
+      if(confirm('Eliminare questo messaggio?')) {
+        await fetch(`${API_URL}/deletePost`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id }) });
+        renderPosts();
+      }
+    };
+  });
+  document.querySelectorAll('img.profile-pic').forEach(img => {
+    img.onclick = () => {
+      const uid = img.dataset.user;
+      showProfilePopupById(uid, true); // open with large image available
+    };
+  });
+  document.querySelectorAll('.username-link').forEach(el => {
+    el.onclick = () => { const uname = el.dataset.username; searchAndOpenPopup(uname); };
+  });
 }
 
-// SEARCH
+// search and open popup by username (exact match priority)
+async function searchAndOpenPopup(username){
+  const res = await fetch(`${API_URL}/users`);
+  const users = await res.json();
+  // prefer exact match (username may include dots)
+  const found = users.find(u => u.username && u.username.toLowerCase() === username.toLowerCase()) || users.find(u => u.username && u.username.toLowerCase().includes(username.toLowerCase()));
+  if(found) showProfilePopupById(found.id, true);
+}
+
+// PROFILE popup by id
+async function showProfilePopupById(id, allowImageOpen){
+  const resUsers = await fetch(`${API_URL}/users`);
+  const users = await resUsers.json();
+  const user = users.find(u => u.id == id);
+  if(!user) return alert('Utente non trovato');
+  popupImg.src = user.profile_pic || '';
+  popupName.textContent = user.username || '';
+  popupClass.textContent = `Classe: ${user.classe || '-'} ${user.sezione || ''}`;
+  popupAddress.textContent = `Indirizzo: ${user.indirizzo || '-'}`;
+  // fetch posts
+  const resPosts = await fetch(`${API_URL}/posts`);
+  const posts = await resPosts.json();
+  const userPosts = posts.filter(p => p.user_id == id && !p.anonymous).slice(0,5);
+  popupPosts.innerHTML = userPosts.length ? userPosts.map(p => `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9">${escapeHtml(p.body)}</div>`).join('') : '<div class="small-muted">Nessun messaggio pubblico</div>';
+  popup.style.display = 'block';
+  popup.classList.remove('hidden');
+  // open image bigger on click if allowed
+  if(allowImageOpen && popupImg.src) {
+    popupImg.style.cursor = 'pointer';
+    popupImg.onclick = () => {
+      // open in new tab (simple)
+      const w = window.open();
+      w.document.write(`<img src="${popupImg.src}" style="width:100%;height:auto">`);
+    };
+  } else {
+    popupImg.onclick = null;
+  }
+}
+
+// search results
 searchBtn.addEventListener('click', async ()=> {
   if(!requireLogin()) return;
   const q = searchInput.value.trim().toLowerCase();
   searchResults.innerHTML = '';
-  const res = await fetch(API_URL + '/api/users');
+  const res = await fetch(`${API_URL}/users`);
   const users = await res.json();
   const filtered = users.filter(u => u.username && u.username.toLowerCase().includes(q));
   filtered.forEach(u => {
     const div = document.createElement('div');
     div.className = 'card search-user';
-    div.innerHTML = `<img src="${u.profile_pic||''}" style="width:56px;height:56px;border-radius:50%;object-fit:cover"/><div style="margin-left:12px;display:inline-block"><strong class="username-link" data-id="${u.id}">${u.username||u.email}</strong><div class="small-muted">Classe: ${u.classe||'-'} ${u.sezione||''} • ${u.indirizzo||'-'}</div></div>`;
+    // user pic, name, info, recent posts
+    div.innerHTML = `<img src="${u.profile_pic||''}"/><div>
+      <strong class="username-link" data-username="${u.username}">${u.username}</strong><div class="small-muted">Classe: ${u.classe||'-'} ${u.sezione||''} • ${u.indirizzo||'-'}</div>
+    </div>`;
     searchResults.appendChild(div);
     div.querySelector('.username-link').onclick = () => showProfilePopupById(u.id, true);
-    div.querySelector('img').onclick = () => showProfilePopupById(u.id, true);
+    div.querySelector('img')?.addEventListener('click', ()=> showProfilePopupById(u.id, true));
   });
 });
 
-// popup
-async function showProfilePopupById(id, allowImageOpen){
-  const resUsers = await fetch(API_URL + '/api/users');
-  const users = await resUsers.json();
-  const user = users.find(u => u.id == id);
-  if(!user) return alert('Utente non trovato');
-  popupImg.src = user.profile_pic || '';
-  popupName.textContent = user.username || user.email;
-  popupClass.textContent = `Classe: ${user.classe || '-' } ${user.sezione || ''}`;
-  popupAddress.textContent = `Indirizzo: ${user.indirizzo || '-'}`;
-  const resPosts = await fetch(API_URL + '/api/posts');
-  const posts = await resPosts.json();
-  const userPosts = posts.filter(p => p.user_id == id && !p.anonymous).slice(0,5);
-  popupPosts.innerHTML = userPosts.length ? userPosts.map(p => `<div style="padding:6px 0;border-bottom:1px solid #f1f5f9">${escapeHtml(p.body)}</div>`).join('') : '<div class="small-muted">Nessun messaggio pubblico</div>';
-  popup.style.display = 'block'; popup.classList.remove('hidden');
-  if(allowImageOpen && popupImg.src){ popupImg.style.cursor='pointer'; popupImg.onclick = ()=> { const w = window.open(); w.document.write(`<img src="${popupImg.src}" style="width:100%;">`); } else popupImg.onclick=null; }
-}
-popupClose.addEventListener('click', ()=> { popup.style.display='none'; popup.classList.add('hidden'); });
+// close popup
+popupClose.addEventListener('click', ()=> { popup.style.display = 'none'; popup.classList.add('hidden'); });
 
 // delete profile
 deleteProfileBtn.addEventListener('click', async () => {
   if(!currentUser) return;
   if(!confirm('Eliminare definitivamente il profilo?')) return;
-  const res = await fetch(API_URL + '/api/deleteProfile', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: currentUser.id })});
-  const data = await res.json();
-  if(data.success){ localStorage.removeItem('student_user'); currentUser=null; pageLogin.classList.remove('hidden'); showOnly(pageBoard); }
+  await fetch(`${API_URL}/deleteProfile`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id: currentUser.id }) });
+  localStorage.removeItem('student_user');
+  currentUser = null;
+  showOnly(pageLogin);
 });
 
 // helper escape
 function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]||c)); }
 
-// delete post helper already used
-
-// initial render if logged
-if(currentUser && !currentUser.first_login){
-  showOnly(pageBoard); renderPosts(); loadProfileToForm();
-} else if(currentUser && currentUser.first_login){
-  showOnly(pageProfile);
-} else {
-  // show login fullscreen (already visible)
+// delete message helper used by bubble (not bound here)
+async function deleteMessage(id){
+  if(!confirm('Eliminare il messaggio?')) return;
+  await fetch(`${API_URL}/deletePost`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id }) });
+  renderPosts();
 }
 
-// end script
+// on load, if logged and not first_login, show board
+if(currentUser && !currentUser.first_login){
+  showOnly(pageBoard);
+  renderPosts();
+  loadProfileToForm();
+} else if(currentUser && currentUser.first_login) {
+  showOnly(pageProfile);
+  loadProfileToForm();
+} else {
+  showOnly(pageLogin);
+}
 </script>
-
 </body>
 </html>
-
-
-
